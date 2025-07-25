@@ -1,6 +1,9 @@
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
-
+-- Example: enable the "uuid-ossp" extension
+create extension "uuid-ossp" with schema dugsinet;
+-- Example: disable the "uuid-ossp" extension
+#drop extension if exists "uuid-ossp";
 CREATE TABLE public.academic_years (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   school_id uuid NOT NULL,

@@ -19,6 +19,7 @@ const { setupErrorHandling } = require('./api/middleware/errorHandler');
 const { connectDatabase } = require('./infrastructure/database');
 const logger = require('./shared/utils/logger');
 const { APP_CONFIG } = require('./config/app');
+const documentationMiddleware = require('./middleware/documentation');
 
 /**
  * Initialize and configure the Express application
@@ -101,3 +102,51 @@ if (require.main === module) {
 }
 
 module.exports = { createApp, startServer };
+
+
+class Application {
+  constructor() {
+    this.app = express();
+    this.server = null;
+    this.setupMiddleware();
+    this.setupRoutes();
+    this.setupDocumentation(); // Add this line
+    this.setupErrorHandling();
+  }
+
+  /**
+   * Setup API documentation
+   */
+  setupDocumentation() {
+    // Initialize documentation middleware
+    documentationMiddleware.initialize().catch(err => 
+      logger.error('Documentation initialization failed:', err)
+    );
+
+    // Swagger UI
+    this.app.use('/docs', ...documentationMiddleware.setupSwaggerUI());
+    
+    // OpenAPI JSON endpoint
+    this.app.get('/docs/openapi.json', documentationMiddleware.serveOpenAPIJSON());
+    
+    // OpenAPI YAML endpoint
+    this.app.get('/docs/openapi.yaml', documentationMiddleware.serveOpenAPIYAML());
+    
+    // Documentation health check
+    this.app.get('/docs/health', documentationMiddleware.healthCheck());
+
+    // Redoc documentation (if available)
+    this.app.get('/redoc', (req, res) => {
+      res.redirect('/docs/redoc.html');
+    });
+
+    // Serve static documentation files
+    this.app.use('/docs/static', express.static(path.join(__dirname, '../docs')));
+
+    logger.info('API documentation endpoints configured', {
+      swagger: '/docs',
+      openapi: '/docs/openapi.json',
+      redoc: '/redoc'
+    });
+  }
+}

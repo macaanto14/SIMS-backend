@@ -17,7 +17,7 @@ const {
   handleValidationErrors 
 } = require('../middleware/validation');
 
-// All routes require authentication
+// 
 router.use(authenticateToken);
 
 // Academic Years
@@ -29,7 +29,7 @@ router.post('/academic-years',
   createAcademicYear
 );
 
-// Classes
+// Classes ok
 router.get('/classes', validatePagination(), handleValidationErrors, getClasses);
 router.post('/classes', 
   validateClass(), 

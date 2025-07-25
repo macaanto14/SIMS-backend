@@ -1,0 +1,56 @@
+{
+  "timestamp": "2025-07-25T23:13:48.703Z",
+  "baseUrl": "http://localhost:3000",
+  "results": [
+    {
+      "endpoint": "/health",
+      "url": "http://localhost:3000/health",
+      "status": 200,
+      "expected": 200,
+      "success": true,
+      "duration": "920ms",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "endpoint": "/api",
+      "url": "http://localhost:3000/api",
+      "status": 200,
+      "expected": 200,
+      "success": true,
+      "duration": "9ms",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "endpoint": "/api-docs",
+      "url": "http://localhost:3000/api-docs",
+      "status": 301,
+      "expected": 200,
+      "success": false,
+      "duration": "11ms",
+      "contentType": "text/html; charset=UTF-8"
+    },
+    {
+      "endpoint": "/api-docs/swagger.json",
+      "url": "http://localhost:3000/api-docs/swagger.json",
+      "status": 200,
+      "expected": 200,
+      "success": true,
+      "duration": "10ms",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "endpoint": "/docs",
+      "url": "http://localhost:3000/docs",
+      "status": 200,
+      "expected": 200,
+      "success": true,
+      "duration": "6ms",
+      "contentType": "text/html; charset=utf-8"
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "successful": 4,
+    "failed": 1
+  }
+}
