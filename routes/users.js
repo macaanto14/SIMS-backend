@@ -1,27 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const { getUsers, getUserById, updateUser, deactivateUser } = require('../controllers/userController');
-const { authenticateToken, requireRole } = require('../middleware/auth');
-const { validateUUID, validatePagination, handleValidationErrors } = require('../middleware/validation');
+const { requirePermission, requireRole, requireSuperAdmin } = require('../middleware/rbac');
+const { authenticateToken } = require('../middleware/auth');
 
-// All routes require authentication
-router.use(authenticateToken);
+// Example: Only Super Admin can create users
+router.post('/', authenticateToken, requireSuperAdmin, (req, res) => {
+  res.json({ message: 'Create user endpoint - Super Admin only' });
+});
 
-// Get users with filtering and pagination
-router.get('/', validatePagination(), handleValidationErrors, getUsers);
+// Example: Admin or Super Admin can view users
+router.get('/', authenticateToken, requireRole(['Super Admin', 'Admin']), (req, res) => {
+  res.json({ message: 'Get users endpoint - Admin or Super Admin' });
+});
 
-// Get user by ID
-router.get('/:id', validateUUID('id'), handleValidationErrors, getUserById);
+// Example: Teachers can read student information
+router.get('/students', authenticateToken, requirePermission('students', 'read'), (req, res) => {
+  res.json({ message: 'Get students endpoint - Teachers with read permission' });
+});
 
-// Update user (users can update their own profile, admins can update any)
-router.put('/:id', validateUUID('id'), handleValidationErrors, updateUser);
-
-// Deactivate user (Admin and Super Admin only)
-router.delete('/:id', 
-  validateUUID('id'), 
-  handleValidationErrors, 
-  requireRole(['Super Admin', 'Admin']), 
-  deactivateUser
-);
+// Example: Only Accountants can collect fees
+router.post('/fees/collect', authenticateToken, requirePermission('finance', 'collect_fees'), (req, res) => {
+  res.json({ message: 'Collect fees endpoint - Accountants only' });
+});
 
 module.exports = router;

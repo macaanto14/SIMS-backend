@@ -113,6 +113,43 @@ const swaggerOptions = {
           },
           required: ['id', 'email', 'firstName', 'lastName']
         },
+        UserRegistration: {
+          type: 'object',
+          properties: {
+            email: { type: 'string', format: 'email', description: 'User email address' },
+            password: { type: 'string', minLength: 8, description: 'User password (min 8 characters)' },
+            firstName: { type: 'string', description: 'User first name' },
+            lastName: { type: 'string', description: 'User last name' },
+            phone: { type: 'string', description: 'User phone number' },
+            schoolId: { type: 'string', format: 'uuid', description: 'School ID for association' }
+          },
+          required: ['email', 'password', 'firstName', 'lastName', 'schoolId']
+        },
+        UserLogin: {
+          type: 'object',
+          properties: {
+            email: { type: 'string', format: 'email', description: 'User email address' },
+            password: { type: 'string', description: 'User password' }
+          },
+          required: ['email', 'password']
+        },
+        AuthResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Authentication successful' },
+            data: {
+              type: 'object',
+              properties: {
+                user: { $ref: '#/components/schemas/User' },
+                token: { type: 'string', description: 'JWT access token' },
+                refreshToken: { type: 'string', description: 'JWT refresh token' },
+                expiresIn: { type: 'integer', description: 'Token expiration time in seconds' }
+              }
+            },
+            timestamp: { type: 'string', format: 'date-time' }
+          }
+        },
         School: {
           type: 'object',
           properties: {
@@ -127,6 +164,39 @@ const swaggerOptions = {
           },
           required: ['id', 'name', 'address']
         },
+        AcademicYear: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            schoolId: { type: 'string', format: 'uuid' },
+            name: { type: 'string', description: 'Academic year name (e.g., "2024-2025")' },
+            startDate: { type: 'string', format: 'date' },
+            endDate: { type: 'string', format: 'date' },
+            isCurrent: { type: 'boolean', description: 'Whether this is the current academic year' },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' }
+          },
+          required: ['id', 'schoolId', 'name', 'startDate', 'endDate']
+        },
+        Class: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            schoolId: { type: 'string', format: 'uuid' },
+            academicYearId: { type: 'string', format: 'uuid' },
+            name: { type: 'string', description: 'Class name' },
+            gradeLevel: { type: 'integer', minimum: 1, maximum: 12 },
+            section: { type: 'string', description: 'Class section (A, B, C, etc.)' },
+            maxStudents: { type: 'integer', minimum: 1 },
+            roomNumber: { type: 'string', description: 'Classroom number' },
+            classTeacherId: { type: 'string', format: 'uuid' },
+            isActive: { type: 'boolean' },
+            studentCount: { type: 'integer', description: 'Current number of enrolled students' },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' }
+          },
+          required: ['id', 'schoolId', 'academicYearId', 'name', 'gradeLevel']
+        },
         ApiResponse: {
           type: 'object',
           properties: {
@@ -137,15 +207,216 @@ const swaggerOptions = {
           },
           required: ['success', 'message']
         },
-        Error: {
+        ErrorResponse: {
           type: 'object',
           properties: {
             success: { type: 'boolean', example: false },
             message: { type: 'string', description: 'Error message' },
-            details: { type: 'object', description: 'Additional error details' },
-            timestamp: { type: 'string', format: 'date-time' }
+            error: { type: 'string', description: 'Error type' },
+            details: { 
+              type: 'object', 
+              description: 'Additional error details',
+              additionalProperties: true
+            },
+            timestamp: { type: 'string', format: 'date-time' },
+            path: { type: 'string', description: 'Request path that caused the error' },
+            requestId: { type: 'string', description: 'Unique request identifier' }
           },
           required: ['success', 'message']
+        },
+        ValidationErrorDetails: {
+          type: 'object',
+          properties: {
+            field: { type: 'string', description: 'Field that failed validation' },
+            message: { type: 'string', description: 'Validation error message' },
+            value: { description: 'Value that failed validation' },
+            code: { type: 'string', description: 'Validation error code' }
+          },
+          required: ['field', 'message']
+        },
+        PaginationMeta: {
+          type: 'object',
+          properties: {
+            currentPage: { type: 'integer', minimum: 1 },
+            totalPages: { type: 'integer', minimum: 0 },
+            totalItems: { type: 'integer', minimum: 0 },
+            itemsPerPage: { type: 'integer', minimum: 1 },
+            hasNextPage: { type: 'boolean' },
+            hasPreviousPage: { type: 'boolean' }
+          }
+        },
+        PaginatedResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string' },
+            data: {
+              type: 'array',
+              items: { type: 'object' }
+            },
+            meta: { $ref: '#/components/schemas/PaginationMeta' },
+            timestamp: { type: 'string', format: 'date-time' }
+          }
+        }
+      },
+      responses: {
+        ValidationError: {
+          description: 'Validation Error - Invalid input data',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: false },
+                  message: { type: 'string', example: 'Validation failed' },
+                  error: { type: 'string', example: 'ValidationError' },
+                  details: {
+                    type: 'array',
+                    items: { $ref: '#/components/schemas/ValidationErrorDetails' }
+                  },
+                  timestamp: { type: 'string', format: 'date-time' }
+                }
+              },
+              example: {
+                success: false,
+                message: 'Validation failed',
+                error: 'ValidationError',
+                details: [
+                  {
+                    field: 'email',
+                    message: 'Invalid email format',
+                    value: 'invalid-email',
+                    code: 'INVALID_EMAIL'
+                  }
+                ],
+                timestamp: '2024-01-15T10:30:00.000Z'
+              }
+            }
+          }
+        },
+        UnauthorizedError: {
+          description: 'Unauthorized - Authentication required',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' },
+              example: {
+                success: false,
+                message: 'Authentication required',
+                error: 'UnauthorizedError',
+                timestamp: '2024-01-15T10:30:00.000Z'
+              }
+            }
+          }
+        },
+        ForbiddenError: {
+          description: 'Forbidden - Insufficient permissions',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' },
+              example: {
+                success: false,
+                message: 'Insufficient permissions',
+                error: 'ForbiddenError',
+                timestamp: '2024-01-15T10:30:00.000Z'
+              }
+            }
+          }
+        },
+        NotFoundError: {
+          description: 'Not Found - Resource does not exist',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' },
+              example: {
+                success: false,
+                message: 'Resource not found',
+                error: 'NotFoundError',
+                timestamp: '2024-01-15T10:30:00.000Z'
+              }
+            }
+          }
+        },
+        ConflictError: {
+          description: 'Conflict - Resource already exists',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' },
+              example: {
+                success: false,
+                message: 'Resource already exists',
+                error: 'ConflictError',
+                timestamp: '2024-01-15T10:30:00.000Z'
+              }
+            }
+          }
+        },
+        RateLimitError: {
+          description: 'Too Many Requests - Rate limit exceeded',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' },
+              example: {
+                success: false,
+                message: 'Too many requests, please try again later',
+                error: 'RateLimitError',
+                details: {
+                  limit: 100,
+                  windowMs: 900000,
+                  retryAfter: 300
+                },
+                timestamp: '2024-01-15T10:30:00.000Z'
+              }
+            }
+          }
+        },
+        InternalServerError: {
+          description: 'Internal Server Error',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' },
+              example: {
+                success: false,
+                message: 'Internal server error',
+                error: 'InternalServerError',
+                timestamp: '2024-01-15T10:30:00.000Z'
+              }
+            }
+          }
+        }
+      },
+      parameters: {
+        PageParam: {
+          name: 'page',
+          in: 'query',
+          description: 'Page number for pagination',
+          required: false,
+          schema: {
+            type: 'integer',
+            minimum: 1,
+            default: 1
+          }
+        },
+        LimitParam: {
+          name: 'limit',
+          in: 'query',
+          description: 'Number of items per page',
+          required: false,
+          schema: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 100,
+            default: 10
+          }
+        },
+        SchoolIdParam: {
+          name: 'schoolId',
+          in: 'query',
+          description: 'School ID filter',
+          required: false,
+          schema: {
+            type: 'string',
+            format: 'uuid'
+          }
         }
       }
     },
@@ -186,15 +457,17 @@ const swaggerUiOptions = {
 };
 
 // Documentation Routes
-// Swagger UI
-app.use('/api-docs', swaggerUi.serve);
-app.get('/api-docs', swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+// Serve static documentation files FIRST (more specific route)
+app.use('/docs/static', express.static(path.join(__dirname, 'docs')));
 
 // Raw OpenAPI JSON
 app.get('/api-docs/swagger.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(swaggerSpec);
 });
+
+// Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
 // Redoc Documentation
 app.get('/docs', redoc({
@@ -383,6 +656,10 @@ app.listen(PORT, () => {
   console.log(`📡 Server running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`📚 API Documentation:`);
+  console.log(`   - Swagger UI: http://localhost:${PORT}/api-docs`);
+  console.log(`   - Redoc: http://localhost:${PORT}/docs`);
+  console.log(`   - API Index: http://localhost:${PORT}/api`);
 });
 
 module.exports = app;
