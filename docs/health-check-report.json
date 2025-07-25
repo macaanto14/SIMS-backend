@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-07-25T23:13:48.703Z",
+  "timestamp": "2025-07-25T23:31:51.228Z",
   "baseUrl": "http://localhost:3000",
   "results": [
     {
@@ -8,7 +8,7 @@
       "status": 200,
       "expected": 200,
       "success": true,
-      "duration": "920ms",
+      "duration": "248ms",
       "contentType": "application/json; charset=utf-8"
     },
     {
@@ -17,7 +17,7 @@
       "status": 200,
       "expected": 200,
       "success": true,
-      "duration": "9ms",
+      "duration": "7ms",
       "contentType": "application/json; charset=utf-8"
     },
     {
@@ -35,7 +35,7 @@
       "status": 200,
       "expected": 200,
       "success": true,
-      "duration": "10ms",
+      "duration": "7ms",
       "contentType": "application/json; charset=utf-8"
     },
     {
@@ -44,7 +44,7 @@
       "status": 200,
       "expected": 200,
       "success": true,
-      "duration": "6ms",
+      "duration": "5ms",
       "contentType": "text/html; charset=utf-8"
     }
   ],
