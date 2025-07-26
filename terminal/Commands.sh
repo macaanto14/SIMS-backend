@@ -47,3 +47,26 @@ node run-corrected-audit-migration.js
 #Test Script Audit Fix
 
 node test-audit-fix.js
+
+
+
+node -e "
+const pool = require('./config/database');
+const fs = require('fs');
+const path = require('path');
+
+async function runMigration() {
+  const client = await pool.connect();
+  try {
+    const sql = fs.readFileSync('./supabase/migrations/create_email_system_fixed.sql', 'utf8');
+    await client.query(sql);
+    console.log('✅ Email system migration completed successfully');
+  } catch (error) {
+    console.error('❌ Migration failed:', error.message);
+  } finally {
+    client.release();
+    process.exit();
+  }
+}
+runMigration();
+"

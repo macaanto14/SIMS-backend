@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to {{systemName}} - School Registration Confirmed</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #059669; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9fafb; }
+        .footer { padding: 20px; text-align: center; color: #666; font-size: 12px; }
+        .button { display: inline-block; padding: 12px 24px; background: #059669; color: white; text-decoration: none; border-radius: 4px; margin: 10px 0; }
+        .info-box { background: #ecfdf5; border: 1px solid #059669; padding: 15px; border-radius: 4px; margin: 15px 0; }
+        .credentials { background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 4px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Welcome to {{systemName}}!</h1>
+        </div>
+        <div class="content">
+            <h2>Dear {{adminName}},</h2>
+            <p>Congratulations! Your school has been successfully registered in our School Information Management System.</p>
+            
+            <div class="info-box">
+                <h3>School Information</h3>
+                <p><strong>School Name:</strong> {{schoolName}}</p>
+                <p><strong>School Code:</strong> {{schoolCode}}</p>
+                <p><strong>School ID:</strong> {{schoolId}}</p>
+            </div>
+            
+            {{#if temporaryPassword}}
+            <div class="credentials">
+                <h3>⚠️ Login Credentials</h3>
+                <p><strong>Email:</strong> {{adminEmail}}</p>
+                <p><strong>Temporary Password:</strong> {{temporaryPassword}}</p>
+                <p><em>Please change your password after first login for security.</em></p>
+            </div>
+            {{/if}}
+            
+            <p>You can now access your school's dashboard and begin managing your institution's information.</p>
+            
+            <div style="text-align: center;">
+                <a href="{{loginUrl}}" class="button">Access Your Dashboard</a>
+            </div>
+            
+            <h3>Next Steps:</h3>
+            <ul>
+                <li>Log in to your dashboard</li>
+                <li>Complete your school profile</li>
+                <li>Add staff and student information</li>
+                <li>Configure system settings</li>
+            </ul>
+        </div>
+        <div class="footer">
+            <p>Welcome to the {{systemName}} family!</p>
+            <p>Need help? Contact us at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a></p>
+        </div>
+    </div>
+</body>
+</html>

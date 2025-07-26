@@ -190,7 +190,10 @@ BEGIN
         current_user_role,
         current_school_id,
         school_name_value,
-        current_ip_address,
+        CASE 
+            WHEN current_ip_address IS NOT NULL THEN current_ip_address::inet
+            ELSE NULL
+        END,
         current_user_agent,
         current_request_id,
         old_data,

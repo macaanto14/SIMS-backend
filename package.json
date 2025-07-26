@@ -27,7 +27,9 @@
     "docs:build": "npm run docs:generate && npm run docs:postman",
     "docs:watch": "nodemon --watch src --watch routes --watch controllers --exec \"npm run docs:generate\"",
     "docs:deploy": "npm run docs:build && npm run deploy:docs",
-    "docs:check": "node scripts/check-docs.js"
+    "docs:check": "node scripts/check-docs.js",
+    "email:setup": "node scripts/setup-email-system.js",
+    "email:test": "node scripts/test-email-system.js"
   },
   "keywords": [
     "school-management",
@@ -49,9 +51,11 @@
     "express": "^4.21.2",
     "express-rate-limit": "^8.0.1",
     "express-validator": "^7.2.1",
+    "handlebars": "^4.7.8",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
+    "nodemailer": "^6.9.8",
     "pg": "^8.16.3",
     "rate-limit-redis": "^4.2.1",
     "redis": "^4.7.1",

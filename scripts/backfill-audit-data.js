@@ -19,9 +19,10 @@ async function backfillAuditData() {
       UPDATE audit_logs 
       SET 
         user_email = u.email,
-        user_role = ur.role_name
+        user_role = r.name
       FROM users u
-      LEFT JOIN user_roles ur ON u.id = ur.user_id
+      LEFT JOIN user_roles ur ON u.id = ur.user_id AND ur.is_active = true
+      LEFT JOIN roles r ON ur.role_id = r.id
       WHERE audit_logs.user_id = u.id 
         AND (audit_logs.user_email IS NULL OR audit_logs.user_role IS NULL)
     `);

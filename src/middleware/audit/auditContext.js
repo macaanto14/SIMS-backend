@@ -3,7 +3,7 @@
  * Sets PostgreSQL session variables for audit trigger functions
  */
 
-const pool = require('../../config/database');
+const pool = require('../../../config/database');
 const logger = require('../../utils/logger');
 
 class AuditContextMiddleware {
