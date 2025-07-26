@@ -36,3 +36,10 @@ pool.query('SELECT COUNT(*) FROM schools')
 ✅ Correct endpoint: GET {{base_url}}/api/schools
 🔑 Authentication: Bearer token required
 📝 Headers: Authorization: Bearer YOUR_JWT_TOKEN
+
+# Use the fixed SQL file:
+node run-fixed-audit-migration.js
+
+# Run migration for Audit
+
+node run-corrected-audit-migration.js
