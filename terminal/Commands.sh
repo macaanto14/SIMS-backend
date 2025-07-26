@@ -43,3 +43,7 @@ node run-fixed-audit-migration.js
 # Run migration for Audit
 
 node run-corrected-audit-migration.js
+
+#Test Script Audit Fix
+
+node test-audit-fix.js

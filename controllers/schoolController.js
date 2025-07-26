@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const { successResponse, errorResponse, getPaginationParams, buildPaginatedResponse } = require('../utils/helpers');
+const AuditContextMiddleware = require('../src/middleware/audit/auditContext');
 
 const getSchools = async (req, res) => {
   try {
@@ -82,55 +83,64 @@ const getSchoolById = async (req, res) => {
 };
 
 const createSchool = async (req, res) => {
-  const client = await pool.connect();
-  
   try {
     // Only Super Admin can create schools
     if (!req.user.roles.some(role => role.roleName === 'Super Admin')) {
       return errorResponse(res, 'Permission denied', 403);
     }
     
-    await client.query('BEGIN');
-    
     const { name, code, address, phone, email, website, logo_url, principal_id, settings } = req.body;
     
-    // Check if school code already exists
-    const existingSchool = await client.query('SELECT id FROM schools WHERE code = $1', [code]);
-    if (existingSchool.rows.length > 0) {
-      return errorResponse(res, 'School code already exists', 409);
-    }
-    
-    // Create school
-    const schoolResult = await client.query(
-      `INSERT INTO schools (name, code, address, phone, email, website, logo_url, principal_id, settings)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING *`,
-      [name, code, address, phone, email, website, logo_url, principal_id, settings || {}]
+    // Use audit context wrapper for database operations
+    const result = await AuditContextMiddleware.executeWithAuditContext(
+      async (client) => {
+        // Check if school code already exists
+        const existingSchool = await client.query('SELECT id FROM schools WHERE code = $1', [code]);
+        if (existingSchool.rows.length > 0) {
+          throw new Error('School code already exists');
+        }
+        
+        // Create school
+        const schoolResult = await client.query(
+          `INSERT INTO schools (name, code, address, phone, email, website, logo_url, principal_id, settings)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+           RETURNING *`,
+          [name, code, address, phone, email, website, logo_url, principal_id, settings || {}]
+        );
+        
+        return schoolResult.rows[0];
+      },
+      {
+        userId: req.user.id,
+        userEmail: req.user.email,
+        userRole: req.user.role_name,
+        schoolId: req.user.school_id,
+        ipAddress: req.ip || req.connection?.remoteAddress,
+        userAgent: req.get('User-Agent'),
+        requestId: req.auditContext?.requestId,
+        operation: 'CREATE_SCHOOL'
+      }
     );
     
-    const school = schoolResult.rows[0];
-    
-    await client.query('COMMIT');
-    
     successResponse(res, {
-      id: school.id,
-      name: school.name,
-      code: school.code,
-      address: school.address,
-      phone: school.phone,
-      email: school.email,
-      website: school.website,
-      logoUrl: school.logo_url,
-      settings: school.settings,
-      createdAt: school.created_at
+      id: result.id,
+      name: result.name,
+      code: result.code,
+      address: result.address,
+      phone: result.phone,
+      email: result.email,
+      website: result.website,
+      logoUrl: result.logo_url,
+      settings: result.settings,
+      createdAt: result.created_at
     }, 'School created successfully', 201);
     
   } catch (error) {
-    await client.query('ROLLBACK');
     console.error('Create school error:', error);
+    if (error.message === 'School code already exists') {
+      return errorResponse(res, error.message, 409);
+    }
     errorResponse(res, 'Failed to create school', 500);
-  } finally {
-    client.release();
   }
 };
 
@@ -144,43 +154,61 @@ const updateSchool = async (req, res) => {
       return errorResponse(res, 'Permission denied', 403);
     }
     
-    const updateResult = await pool.query(
-      `UPDATE schools 
-       SET name = COALESCE($1, name),
-           address = COALESCE($2, address),
-           phone = COALESCE($3, phone),
-           email = COALESCE($4, email),
-           website = COALESCE($5, website),
-           logo_url = COALESCE($6, logo_url),
-           principal_id = COALESCE($7, principal_id),
-           settings = COALESCE($8, settings),
-           updated_at = NOW()
-       WHERE id = $9 AND is_active = true
-       RETURNING *`,
-      [name, address, phone, email, website, logo_url, principal_id, settings, id]
+    // Use audit context wrapper for database operations
+    const result = await AuditContextMiddleware.executeWithAuditContext(
+      async (client) => {
+        const updateResult = await client.query(
+          `UPDATE schools 
+           SET name = COALESCE($1, name),
+               address = COALESCE($2, address),
+               phone = COALESCE($3, phone),
+               email = COALESCE($4, email),
+               website = COALESCE($5, website),
+               logo_url = COALESCE($6, logo_url),
+               principal_id = COALESCE($7, principal_id),
+               settings = COALESCE($8, settings),
+               updated_at = NOW()
+           WHERE id = $9 AND is_active = true
+           RETURNING *`,
+          [name, address, phone, email, website, logo_url, principal_id, settings, id]
+        );
+        
+        if (updateResult.rows.length === 0) {
+          throw new Error('School not found');
+        }
+        
+        return updateResult.rows[0];
+      },
+      {
+        userId: req.user.id,
+        userEmail: req.user.email,
+        userRole: req.user.role_name,
+        schoolId: req.user.school_id,
+        ipAddress: req.ip || req.connection?.remoteAddress,
+        userAgent: req.get('User-Agent'),
+        requestId: req.auditContext?.requestId,
+        operation: 'UPDATE_SCHOOL'
+      }
     );
     
-    if (updateResult.rows.length === 0) {
-      return errorResponse(res, 'School not found', 404);
-    }
-    
-    const school = updateResult.rows[0];
-    
     successResponse(res, {
-      id: school.id,
-      name: school.name,
-      code: school.code,
-      address: school.address,
-      phone: school.phone,
-      email: school.email,
-      website: school.website,
-      logoUrl: school.logo_url,
-      settings: school.settings,
-      updatedAt: school.updated_at
+      id: result.id,
+      name: result.name,
+      code: result.code,
+      address: result.address,
+      phone: result.phone,
+      email: result.email,
+      website: result.website,
+      logoUrl: result.logo_url,
+      settings: result.settings,
+      updatedAt: result.updated_at
     }, 'School updated successfully');
     
   } catch (error) {
     console.error('Update school error:', error);
+    if (error.message === 'School not found') {
+      return errorResponse(res, error.message, 404);
+    }
     errorResponse(res, 'Failed to update school', 500);
   }
 };

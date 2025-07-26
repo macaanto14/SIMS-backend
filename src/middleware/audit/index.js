@@ -1,39 +1,22 @@
-/**
- * Comprehensive Audit Trail Middleware
- * 
- * This middleware provides automatic audit logging for all API operations,
- * ensuring transparency and accountability across the SIMS system.
- * 
- * Features:
- * - Automatic operation logging
- * - User context tracking
- * - Request/response correlation
- * - Performance monitoring
- * - Data access logging
- * - Security event tracking
- * 
- * @author Assistant
- * @version 1.0.0
- */
-
+const { Pool } = require('pg');
 const { v4: uuidv4 } = require('uuid');
-const pool = require('../../../config/database');
 const logger = require('../../utils/logger');
 
-/**
- * Audit Trail Middleware Class
- */
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
+
 class AuditMiddleware {
   constructor() {
-    this.sensitiveFields = new Set([
+    this.sensitiveFields = [
       'password', 'password_hash', 'token', 'secret', 'key',
-      'ssn', 'social_security', 'credit_card', 'bank_account'
-    ]);
+      'credit_card', 'ssn', 'social_security'
+    ];
     
-    this.criticalTables = new Set([
-      'users', 'user_roles', 'schools', 'fee_payments', 
-      'grades', 'attendance', 'expenses'
-    ]);
+    this.criticalTables = [
+      'users', 'user_roles', 'schools', 'fee_payments', 'grades'
+    ];
   }
 
   /**
@@ -42,12 +25,10 @@ class AuditMiddleware {
   auditMiddleware() {
     return async (req, res, next) => {
       const startTime = Date.now();
-      const requestId = uuidv4();
       
-      // Add request ID to response locals for correlation
-      res.locals.requestId = requestId;
+      // Initialize audit context
       req.auditContext = {
-        requestId,
+        requestId: uuidv4(),
         startTime,
         operation: this.determineOperation(req),
         module: this.determineModule(req.path),
@@ -57,19 +38,22 @@ class AuditMiddleware {
       // Log request start
       await this.logRequestStart(req);
 
-      // Override res.json to capture response data
-      const originalJson = res.json;
-      res.json = function(data) {
-        req.auditContext.responseData = data;
-        req.auditContext.statusCode = res.statusCode;
-        return originalJson.call(this, data);
-      };
-
-      // Log when response finishes
-      res.on('finish', async () => {
+      // Override res.end to capture response
+      const originalEnd = res.end;
+      res.end = function(chunk, encoding) {
         const duration = Date.now() - startTime;
-        await this.logRequestEnd(req, res, duration);
-      });
+        
+        // Log request completion
+        setImmediate(async () => {
+          try {
+            await req.auditMiddleware?.logRequestEnd(req, res, duration);
+          } catch (error) {
+            logger.error('Failed to log request end', { error: error.message });
+          }
+        });
+
+        originalEnd.call(this, chunk, encoding);
+      };
 
       next();
     };
@@ -78,40 +62,38 @@ class AuditMiddleware {
   /**
    * Log database operations
    */
-  async logDatabaseOperation(operation, tableName, recordId, oldData, newData, userContext) {
+  async logDatabaseOperation(operation, tableName, recordId, oldData, newData, userContext = {}) {
     try {
-      const changedFields = this.getChangedFields(oldData, newData);
-      const sanitizedOldData = this.sanitizeData(oldData);
-      const sanitizedNewData = this.sanitizeData(newData);
-
       const auditLog = {
         operation_type: operation.toUpperCase(),
         table_name: tableName,
         record_id: recordId,
-        user_id: userContext?.userId,
-        user_email: userContext?.email,
-        user_role: userContext?.role,
-        school_id: userContext?.schoolId,
-        ip_address: userContext?.ipAddress,
-        user_agent: userContext?.userAgent,
-        request_id: userContext?.requestId,
-        session_id: userContext?.sessionId,
-        old_values: sanitizedOldData,
-        new_values: sanitizedNewData,
-        changed_fields: changedFields,
+        user_id: userContext.userId,
+        user_email: userContext.email,
+        user_role: userContext.role,
+        school_id: userContext.schoolId,
+        ip_address: userContext.ipAddress,
+        user_agent: userContext.userAgent,
+        request_id: userContext.requestId,
+        session_id: userContext.sessionId,
+        old_values: this.sanitizeData(oldData),
+        new_values: this.sanitizeData(newData),
+        changed_fields: this.getChangedFields(oldData, newData),
         module: this.getModuleForTable(tableName),
-        action: `${operation}_${tableName}`,
-        description: `${operation.toUpperCase()} operation on ${tableName}`,
+        action: `${operation.toUpperCase()}_${tableName.toUpperCase()}`,
+        description: `${operation} operation on ${tableName}`,
         success: true,
         created_at: new Date()
       };
 
-      await this.insertAuditLog(auditLog);
+      const auditId = await this.insertAuditLog(auditLog);
 
-      // Log critical operations separately
-      if (this.criticalTables.has(tableName)) {
-        await this.logCriticalOperation(auditLog);
+      // Log critical operations as system events
+      if (this.criticalTables.includes(tableName)) {
+        await this.logCriticalOperation({ ...auditLog, id: auditId });
       }
+
+      return auditId;
 
     } catch (error) {
       logger.error('Failed to log database operation', {
@@ -124,38 +106,45 @@ class AuditMiddleware {
   }
 
   /**
-   * Log user authentication events
+   * Log authentication events
    */
-  async logAuthEvent(eventType, userId, userEmail, success, details = {}) {
+  async logAuthEvent(eventType, userId, details = {}) {
     try {
       const auditLog = {
         operation_type: eventType.toUpperCase(),
-        table_name: 'users',
+        table_name: 'auth_events',
         record_id: userId,
         user_id: userId,
-        user_email: userEmail,
+        user_email: details.email,
+        user_role: details.role,
+        school_id: details.schoolId,
         ip_address: details.ipAddress,
         user_agent: details.userAgent,
         request_id: details.requestId,
         session_id: details.sessionId,
-        module: 'authentication',
-        action: eventType.toLowerCase(),
-        description: `User ${eventType.toLowerCase()} ${success ? 'successful' : 'failed'}`,
-        success: success,
-        error_message: details.errorMessage,
-        new_values: success ? { login_timestamp: new Date() } : null,
+        module: 'auth',
+        action: `AUTH_${eventType.toUpperCase()}`,
+        description: `Authentication event: ${eventType}`,
+        success: details.success !== false,
+        error_message: details.error,
+        new_values: {
+          eventType,
+          loginMethod: details.loginMethod,
+          deviceInfo: details.deviceInfo,
+          location: details.location
+        },
         created_at: new Date()
       };
 
       await this.insertAuditLog(auditLog);
 
-      // Create user session record for successful logins
-      if (eventType === 'LOGIN' && success) {
+      // Create user session for successful logins
+      if (eventType === 'LOGIN' && details.success !== false) {
         await this.createUserSession(userId, details);
       }
 
-      // Update session for logout
-      if (eventType === 'LOGOUT' && success) {
+      // End user session for logouts
+      if (eventType === 'LOGOUT') {
         await this.endUserSession(details.sessionId, 'manual');
       }
 
@@ -163,8 +152,7 @@ class AuditMiddleware {
       logger.error('Failed to log auth event', {
         error: error.message,
         eventType,
-        userId,
-        success
+        userId
       });
     }
   }
@@ -176,20 +164,17 @@ class AuditMiddleware {
     try {
       const accessLog = {
         user_id: userId,
-        accessed_table: tableName,
-        accessed_record_id: recordId,
+        table_name: tableName,  // Fixed: was accessed_table
+        record_id: recordId,    // Fixed: was accessed_record_id
         access_type: accessType.toUpperCase(),
         query_type: details.queryType || 'SELECT',
         filters_applied: details.filters,
-        records_count: details.recordsCount || 1,
+        result_count: details.recordsCount || 1,  // Fixed: was records_count
         module: this.getModuleForTable(tableName),
-        feature: details.feature,
         purpose: details.purpose,
         ip_address: details.ipAddress,
         user_agent: details.userAgent,
-        request_id: details.requestId,
-        duration_ms: details.duration,
-        accessed_at: new Date()
+        created_at: new Date()  // Fixed: was accessed_at
       };
 
       await this.insertDataAccessLog(accessLog);
@@ -216,18 +201,9 @@ class AuditMiddleware {
         title,
         description,
         details: details,
-        triggered_by: details.triggeredBy,
-        affected_users: details.affectedUsers,
-        affected_schools: details.affectedSchools,
-        server_info: {
-          hostname: require('os').hostname(),
-          platform: process.platform,
-          nodeVersion: process.version,
-          memory: process.memoryUsage(),
-          uptime: process.uptime()
-        },
-        environment: process.env.NODE_ENV || 'development',
-        occurred_at: new Date(),
+        user_id: details.triggeredBy,
+        school_id: details.schoolId,
+        ip_address: details.ipAddress,
         created_at: new Date()
       };
 
@@ -461,21 +437,20 @@ class AuditMiddleware {
   async insertDataAccessLog(accessLog) {
     const query = `
       INSERT INTO data_access_logs (
-        user_id, accessed_table, accessed_record_id, access_type, query_type,
-        filters_applied, records_count, module, feature, purpose, ip_address,
-        user_agent, request_id, duration_ms, accessed_at
+        user_id, table_name, record_id, access_type, query_type,
+        filters_applied, result_count, purpose, ip_address,
+        user_agent, created_at
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
       ) RETURNING id
     `;
 
     const values = [
-      accessLog.user_id, accessLog.accessed_table, accessLog.accessed_record_id,
+      accessLog.user_id, accessLog.table_name, accessLog.record_id,
       accessLog.access_type, accessLog.query_type,
-      JSON.stringify(accessLog.filters_applied), accessLog.records_count,
-      accessLog.module, accessLog.feature, accessLog.purpose,
-      accessLog.ip_address, accessLog.user_agent, accessLog.request_id,
-      accessLog.duration_ms, accessLog.accessed_at
+      JSON.stringify(accessLog.filters_applied), accessLog.result_count,
+      accessLog.purpose, accessLog.ip_address, accessLog.user_agent,
+      accessLog.created_at
     ];
 
     const result = await pool.query(query, values);
@@ -486,19 +461,17 @@ class AuditMiddleware {
     const query = `
       INSERT INTO system_events (
         event_type, event_category, severity, title, description, details,
-        triggered_by, affected_users, affected_schools, server_info,
-        environment, occurred_at, created_at
+        user_id, school_id, ip_address, created_at
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
       ) RETURNING id
     `;
 
     const values = [
       systemEvent.event_type, systemEvent.event_category, systemEvent.severity,
       systemEvent.title, systemEvent.description, JSON.stringify(systemEvent.details),
-      systemEvent.triggered_by, systemEvent.affected_users, systemEvent.affected_schools,
-      JSON.stringify(systemEvent.server_info), systemEvent.environment,
-      systemEvent.occurred_at, systemEvent.created_at
+      systemEvent.user_id, systemEvent.school_id, systemEvent.ip_address,
+      systemEvent.created_at
     ];
 
     const result = await pool.query(query, values);
@@ -512,14 +485,15 @@ class AuditMiddleware {
     const query = `
       INSERT INTO user_sessions (
         user_id, session_token, ip_address, user_agent, device_info,
-        expires_at, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        login_at, is_active, last_activity, school_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING id, session_token
     `;
 
     const values = [
       userId, sessionToken, details.ipAddress, details.userAgent,
-      JSON.stringify(details.deviceInfo || {}), expiresAt, new Date(), new Date()
+      JSON.stringify(details.deviceInfo || {}), new Date(), true, new Date(),
+      details.schoolId
     ];
 
     const result = await pool.query(query, values);
@@ -529,11 +503,11 @@ class AuditMiddleware {
   async endUserSession(sessionId, reason) {
     const query = `
       UPDATE user_sessions 
-      SET is_active = false, logout_at = $1, logout_reason = $2, updated_at = $3
-      WHERE session_token = $4 OR id = $4
+      SET is_active = false, logout_at = $1, last_activity = $2
+      WHERE session_token = $3 OR id = $3
     `;
 
-    await pool.query(query, [new Date(), reason, new Date(), sessionId]);
+    await pool.query(query, [new Date(), new Date(), sessionId]);
   }
 }
 
