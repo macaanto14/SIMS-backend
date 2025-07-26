@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const { hashPassword, comparePassword, generateToken, successResponse, errorResponse } = require('../utils/helpers');
 const { clearUserPermissionCache } = require('../middleware/rbac');
+const { logAuthEvent, logSystemEvent } = require('../src/middleware/audit');
 
 const register = async (req, res) => {
   const client = await pool.connect();
@@ -13,6 +14,19 @@ const register = async (req, res) => {
     // Check if user already exists
     const existingUser = await client.query('SELECT id FROM users WHERE email = $1', [email]);
     if (existingUser.rows.length > 0) {
+      // Log failed registration attempt
+      await logAuthEvent(
+        null,
+        'REGISTER',
+        false,
+        'Registration failed - email already exists',
+        {
+          email,
+          reason: 'duplicate_email',
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent')
+        }
+      );
       return errorResponse(res, 'User already exists with this email', 409);
     }
     
@@ -21,6 +35,19 @@ const register = async (req, res) => {
     if (role) {
       const roleResult = await client.query('SELECT id FROM roles WHERE name = $1', [role]);
       if (roleResult.rows.length === 0) {
+        await logAuthEvent(
+          null,
+          'REGISTER',
+          false,
+          'Registration failed - invalid role',
+          {
+            email,
+            role,
+            reason: 'invalid_role',
+            ipAddress: req.ip,
+            userAgent: req.get('User-Agent')
+          }
+        );
         return errorResponse(res, 'Invalid role specified', 400);
       }
       roleId = roleResult.rows[0].id;
@@ -30,6 +57,19 @@ const register = async (req, res) => {
     if (school_id) {
       const schoolResult = await client.query('SELECT id FROM schools WHERE id = $1 AND is_active = true', [school_id]);
       if (schoolResult.rows.length === 0) {
+        await logAuthEvent(
+          null,
+          'REGISTER',
+          false,
+          'Registration failed - invalid school',
+          {
+            email,
+            school_id,
+            reason: 'invalid_school',
+            ipAddress: req.ip,
+            userAgent: req.get('User-Agent')
+          }
+        );
         return errorResponse(res, 'Invalid or inactive school specified', 400);
       }
     }
@@ -57,6 +97,21 @@ const register = async (req, res) => {
     
     await client.query('COMMIT');
     
+    // Log successful registration
+    await logAuthEvent(
+      user.id,
+      'REGISTER',
+      true,
+      'User registered successfully',
+      {
+        email: user.email,
+        role: role || null,
+        school_id: school_id || null,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      }
+    );
+    
     // Generate JWT token
     const token = generateToken({ userId: user.id, email: user.email });
     
@@ -76,6 +131,22 @@ const register = async (req, res) => {
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Registration error:', error);
+    
+    // Log registration error
+    await logAuthEvent(
+      null,
+      'REGISTER',
+      false,
+      'Registration failed - system error',
+      {
+        email: req.body.email,
+        error: error.message,
+        reason: 'system_error',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      }
+    );
+    
     errorResponse(res, 'Registration failed', 500);
   } finally {
     client.release();
@@ -99,18 +170,57 @@ const login = async (req, res) => {
     );
     
     if (userResult.rows.length === 0) {
+      // Log failed login attempt - user not found
+      await logAuthEvent(
+        null,
+        'LOGIN',
+        false,
+        'Login failed - user not found',
+        {
+          email,
+          reason: 'user_not_found',
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent')
+        }
+      );
       return errorResponse(res, 'Invalid credentials', 401);
     }
     
     const user = userResult.rows[0];
     
     if (!user.is_active) {
+      // Log failed login attempt - account deactivated
+      await logAuthEvent(
+        user.id,
+        'LOGIN',
+        false,
+        'Login failed - account deactivated',
+        {
+          email,
+          reason: 'account_deactivated',
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent')
+        }
+      );
       return errorResponse(res, 'Account is deactivated', 401);
     }
     
     // Verify password
     const isValidPassword = await comparePassword(password, user.password_hash);
     if (!isValidPassword) {
+      // Log failed login attempt - invalid password
+      await logAuthEvent(
+        user.id,
+        'LOGIN',
+        false,
+        'Login failed - invalid password',
+        {
+          email,
+          reason: 'invalid_password',
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent')
+        }
+      );
       return errorResponse(res, 'Invalid credentials', 401);
     }
     
@@ -140,6 +250,21 @@ const login = async (req, res) => {
         schoolName: row.school_name
       }));
     
+    // Log successful login
+    await logAuthEvent(
+      user.id,
+      'LOGIN',
+      true,
+      'User logged in successfully',
+      {
+        email: user.email,
+        roles: roles.map(r => r.roleName),
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        sessionStart: new Date()
+      }
+    );
+    
     successResponse(res, {
       user: {
         id: user.id,
@@ -153,6 +278,22 @@ const login = async (req, res) => {
     
   } catch (error) {
     console.error('Login error:', error);
+    
+    // Log login system error
+    await logAuthEvent(
+      null,
+      'LOGIN',
+      false,
+      'Login failed - system error',
+      {
+        email: req.body.email,
+        error: error.message,
+        reason: 'system_error',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      }
+    );
+    
     errorResponse(res, 'Login failed', 500);
   }
 };

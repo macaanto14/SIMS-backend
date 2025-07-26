@@ -14,9 +14,13 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const schoolRoutes = require('./routes/schools');
 const academicRoutes = require('./routes/academic');
+const auditRoutes = require('./routes/audit');
 
 // Import database connection
 const pool = require('./config/database');
+
+// Import audit middleware - Fixed import with destructuring
+const { auditMiddleware } = require('./src/middleware/audit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -561,11 +565,15 @@ app.get('/health', async (req, res) => {
   }
 });
 
+// Apply audit middleware globally (after authentication middleware)
+app.use(auditMiddleware());
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/schools', schoolRoutes);
 app.use('/api', academicRoutes);
+app.use('/api/audit', auditRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
