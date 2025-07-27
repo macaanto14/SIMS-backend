@@ -1,33 +1,26 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// Create a more robust connection configuration for Supabase
+// Create a connection configuration for local PostgreSQL
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  },
-  // Reduced pool size for Supabase stability
-  max: 5, // Much smaller pool size
-  min: 1, // Keep at least 1 connection
-  idleTimeoutMillis: 10000, // 10 seconds - shorter idle timeout
-  connectionTimeoutMillis: 5000, // 5 seconds - shorter connection timeout
-  acquireTimeoutMillis: 5000,
-  createTimeoutMillis: 5000,
-  destroyTimeoutMillis: 3000,
+  // Disable SSL for local PostgreSQL
+  ssl: false,
+  // Connection pool settings for local development
+  max: 10, // Maximum number of clients in the pool
+  min: 2, // Minimum number of clients in the pool
+  idleTimeoutMillis: 30000, // 30 seconds
+  connectionTimeoutMillis: 10000, // 10 seconds
+  acquireTimeoutMillis: 10000,
+  createTimeoutMillis: 10000,
+  destroyTimeoutMillis: 5000,
   reapIntervalMillis: 1000,
-  createRetryIntervalMillis: 100,
-  // Additional Supabase-specific settings
-  keepAlive: false, // Disable keep-alive for pooler
-  statement_timeout: 30000, // 30 second statement timeout
-  query_timeout: 30000, // 30 second query timeout
+  createRetryIntervalMillis: 200,
 });
 
 // Enhanced error handling
 pool.on('connect', (client) => {
   console.log('✅ New client connected to PostgreSQL database');
-  // Set session timeout for this connection
-  client.query('SET statement_timeout = 30000');
 });
 
 pool.on('acquire', (client) => {
@@ -43,17 +36,19 @@ pool.on('error', (err, client) => {
   // Don't exit process, let the app handle the error gracefully
 });
 
-// Simple connection test without keeping connection open
+// Simple connection test
 const testConnection = async () => {
   let client;
   try {
     console.log('🔄 Testing database connection...');
     client = await pool.connect();
-    const result = await client.query('SELECT NOW() as current_time');
+    const result = await client.query('SELECT NOW() as current_time, version() as db_version');
     console.log('✅ Database connection successful:', result.rows[0].current_time);
+    console.log('📊 Database version:', result.rows[0].db_version);
     return true;
   } catch (error) {
     console.error('❌ Database connection failed:', error.message);
+    console.error('💡 Make sure PostgreSQL is running and the database "sims" exists');
     return false;
   } finally {
     if (client) {
