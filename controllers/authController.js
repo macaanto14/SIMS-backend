@@ -16,13 +16,12 @@ const register = async (req, res) => {
     if (existingUser.rows.length > 0) {
       // Log failed registration attempt
       await logAuthEvent(
-        null,
         'REGISTER',
-        false,
-        'Registration failed - email already exists',
+        null,
         {
           email,
           reason: 'duplicate_email',
+          success: false,
           ipAddress: req.ip,
           userAgent: req.get('User-Agent')
         }
@@ -36,14 +35,13 @@ const register = async (req, res) => {
       const roleResult = await client.query('SELECT id FROM roles WHERE name = $1', [role]);
       if (roleResult.rows.length === 0) {
         await logAuthEvent(
-          null,
           'REGISTER',
-          false,
-          'Registration failed - invalid role',
+          null,
           {
             email,
             role,
             reason: 'invalid_role',
+            success: false,
             ipAddress: req.ip,
             userAgent: req.get('User-Agent')
           }
@@ -58,14 +56,13 @@ const register = async (req, res) => {
       const schoolResult = await client.query('SELECT id FROM schools WHERE id = $1 AND is_active = true', [school_id]);
       if (schoolResult.rows.length === 0) {
         await logAuthEvent(
-          null,
           'REGISTER',
-          false,
-          'Registration failed - invalid school',
+          null,
           {
             email,
             school_id,
             reason: 'invalid_school',
+            success: false,
             ipAddress: req.ip,
             userAgent: req.get('User-Agent')
           }
@@ -99,14 +96,13 @@ const register = async (req, res) => {
     
     // Log successful registration
     await logAuthEvent(
-      user.id,
       'REGISTER',
-      true,
-      'User registered successfully',
+      user.id,
       {
         email: user.email,
         role: role || null,
         school_id: school_id || null,
+        success: true,
         ipAddress: req.ip,
         userAgent: req.get('User-Agent')
       }
@@ -134,14 +130,13 @@ const register = async (req, res) => {
     
     // Log registration error
     await logAuthEvent(
-      null,
       'REGISTER',
-      false,
-      'Registration failed - system error',
+      null,
       {
         email: req.body.email,
         error: error.message,
         reason: 'system_error',
+        success: false,
         ipAddress: req.ip,
         userAgent: req.get('User-Agent')
       }
@@ -171,28 +166,6 @@ const login = async (req, res) => {
     
     if (userResult.rows.length === 0) {
       // Log failed login attempt - user not found
-      // Fix all logAuthEvent calls - change from:
-      // logAuthEvent(userId, eventType, success, message, details)
-      // to:
-      // logAuthEvent(eventType, userId, details)
-      
-      // Example fixes:
-      
-      // BEFORE (incorrect):
-      await logAuthEvent(
-        null,
-        'LOGIN',
-        false,
-        'Login failed - user not found',
-        {
-          email,
-          reason: 'user_not_found',
-          ipAddress: req.ip,
-          userAgent: req.get('User-Agent')
-        }
-      );
-      
-      // AFTER (correct):
       await logAuthEvent(
         'LOGIN',
         null,
@@ -200,49 +173,6 @@ const login = async (req, res) => {
           email,
           reason: 'user_not_found',
           success: false,
-          ipAddress: req.ip,
-          userAgent: req.get('User-Agent')
-        }
-      );
-      
-      // BEFORE (incorrect):
-      await logAuthEvent(
-        user.id,
-        'LOGIN',
-        true,
-        'User logged in successfully',
-        {
-          email: user.email,
-          roles: roles.map(r => r.roleName),
-          ipAddress: req.ip,
-          userAgent: req.get('User-Agent'),
-          sessionStart: new Date()
-        }
-      );
-      
-      // AFTER (correct):
-      await logAuthEvent(
-        'LOGIN',
-        user.id,
-        {
-          email: user.email,
-          roles: roles.map(r => r.roleName),
-          success: true,
-          ipAddress: req.ip,
-          userAgent: req.get('User-Agent'),
-          sessionStart: new Date()
-        }
-      );
-      
-      // Log failed login attempt - invalid password
-      await logAuthEvent(
-        user.id,
-        'LOGIN',
-        false,
-        'Login failed - invalid password',
-        {
-          email,
-          reason: 'invalid_password',
           ipAddress: req.ip,
           userAgent: req.get('User-Agent')
         }
@@ -255,13 +185,12 @@ const login = async (req, res) => {
     if (!user.is_active) {
       // Log failed login attempt - account deactivated
       await logAuthEvent(
-        user.id,
         'LOGIN',
-        false,
-        'Login failed - account deactivated',
+        user.id,
         {
           email,
           reason: 'account_deactivated',
+          success: false,
           ipAddress: req.ip,
           userAgent: req.get('User-Agent')
         }
@@ -274,13 +203,12 @@ const login = async (req, res) => {
     if (!isValidPassword) {
       // Log failed login attempt - invalid password
       await logAuthEvent(
-        user.id,
         'LOGIN',
-        false,
-        'Login failed - invalid password',
+        user.id,
         {
           email,
           reason: 'invalid_password',
+          success: false,
           ipAddress: req.ip,
           userAgent: req.get('User-Agent')
         }
@@ -316,13 +244,12 @@ const login = async (req, res) => {
     
     // Log successful login
     await logAuthEvent(
-      user.id,
       'LOGIN',
-      true,
-      'User logged in successfully',
+      user.id,
       {
         email: user.email,
         roles: roles.map(r => r.roleName),
+        success: true,
         ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
         sessionStart: new Date()
@@ -345,14 +272,13 @@ const login = async (req, res) => {
     
     // Log login system error
     await logAuthEvent(
-      null,
       'LOGIN',
-      false,
-      'Login failed - system error',
+      null,
       {
         email: req.body.email,
         error: error.message,
         reason: 'system_error',
+        success: false,
         ipAddress: req.ip,
         userAgent: req.get('User-Agent')
       }
