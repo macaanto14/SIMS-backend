@@ -1,0 +1,668 @@
+{
+  "info": {
+    "name": "SIMS Backend - Super Admin Tests",
+    "description": "Comprehensive test collection for all SIMS Backend endpoints with Super Admin user",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [
+          "// Auto-login if no token exists",
+          "if (!pm.environment.get('authToken')) {",
+          "    console.log('No auth token found, attempting login...');",
+          "    pm.sendRequest({",
+          "        url: pm.environment.get('baseUrl') + '/api/auth/login',",
+          "        method: 'POST',",
+          "        header: {",
+          "            'Content-Type': 'application/json'",
+          "        },",
+          "        body: {",
+          "            mode: 'raw',",
+          "            raw: JSON.stringify({",
+          "                email: pm.environment.get('adminEmail'),",
+          "                password: pm.environment.get('adminPassword')",
+          "            })",
+          "        }",
+          "    }, function (err, response) {",
+          "        if (err) {",
+          "            console.log('Login failed:', err);",
+          "        } else if (response.json().success) {",
+          "            pm.environment.set('authToken', response.json().data.token);",
+          "            pm.environment.set('userId', response.json().data.user.id);",
+          "            console.log('Auto-login successful');",
+          "        }",
+          "    });",
+          "}"
+        ],
+        "type": "text/javascript"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login Super Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.data.token).to.exist;",
+                  "    ",
+                  "    // Store token and user info",
+                  "    pm.environment.set('authToken', response.data.token);",
+                  "    pm.environment.set('userId', response.data.user.id);",
+                  "    pm.environment.set('userEmail', response.data.user.email);",
+                  "    ",
+                  "    // Verify Super Admin role",
+                  "    const roles = response.data.user.roles.map(r => r.roleName);",
+                  "    pm.expect(roles).to.include('Super Admin');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Profile retrieved successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.data.email).to.exist;",
+                  "    pm.expect(response.data.roles).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Health check successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.equal('OK');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Management",
+      "item": [
+        {
+          "name": "Get All Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Users retrieved successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('User created successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"firstName\": \"New\",\n  \"lastName\": \"User\",\n  \"password\": \"newuser123\",\n  \"phone\": \"+1234567890\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            }
+          }
+        },
+        {
+          "name": "Get Students",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/students",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "students"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "School Management",
+      "item": [
+        {
+          "name": "Get Schools",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Schools retrieved successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/schools?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "schools"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create School",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('School created successfully', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.id) {",
+                  "        pm.environment.set('schoolId', response.data.id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test School {{$timestamp}}\",\n  \"address\": \"123 Test Street, Test City\",\n  \"phone\": \"+1234567890\",\n  \"email\": \"test{{$timestamp}}@school.com\",\n  \"principalName\": \"John Doe\",\n  \"establishedYear\": 2020,\n  \"schoolType\": \"Primary\",\n  \"website\": \"https://testschool.com\",\n  \"description\": \"A test school for API testing\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/schools",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "schools"]
+            }
+          }
+        },
+        {
+          "name": "Get School by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/schools/{{schoolId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "schools", "{{schoolId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Academic Management",
+      "item": [
+        {
+          "name": "Get Academic Years",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/academic/academic-years?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "academic", "academic-years"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Academic Year",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.id) {",
+                  "        pm.environment.set('academicYearId', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"2024-2025 Academic Year\",\n  \"startDate\": \"2024-09-01\",\n  \"endDate\": \"2025-06-30\",\n  \"isCurrent\": true,\n  \"description\": \"Test academic year\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/academic/academic-years",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "academic", "academic-years"]
+            }
+          }
+        },
+        {
+          "name": "Get Classes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/academic/classes?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "academic", "classes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Class",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Grade 1A - Test Class\",\n  \"academicYearId\": \"{{academicYearId}}\",\n  \"capacity\": 30,\n  \"teacherId\": \"{{userId}}\",\n  \"schoolId\": \"{{schoolId}}\",\n  \"description\": \"Test class for API testing\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/academic/classes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "academic", "classes"]
+            }
+          }
+        },
+        {
+          "name": "Get Attendance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/academic/attendance?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "academic", "attendance"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit Trail",
+      "item": [
+        {
+          "name": "Get Audit Logs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Audit logs retrieved successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit/logs?page=1&limit=20&operation_type=CREATE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "audit", "logs"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "operation_type",
+                  "value": "CREATE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User Activity Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit/user-activity?days=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "audit", "user-activity"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "30"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get System Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit/dashboard?days=7",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "audit", "dashboard"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "7"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit/export?format=json&start_date=2024-01-01&end_date=2024-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "audit", "export"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "json"
+                },
+                {
+                  "key": "start_date",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Email Notifications",
+      "item": [
+        {
+          "name": "Send System Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adminEmails\": [\"admin@example.com\"],\n  \"subject\": \"Test System Notification\",\n  \"message\": \"This is a test system notification from the API\",\n  \"priority\": \"HIGH\",\n  \"category\": \"SYSTEM\",\n  \"metadata\": {\n    \"source\": \"API_TEST\",\n    \"timestamp\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/email/system-notification",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "email", "system-notification"]
+            }
+          }
+        },
+        {
+          "name": "Send Audit Alert",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adminEmails\": [\"admin@example.com\"],\n  \"alertType\": \"SECURITY_BREACH\",\n  \"severity\": \"HIGH\",\n  \"description\": \"Suspicious login activity detected\",\n  \"details\": \"Multiple failed login attempts from unknown IP address\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/email/audit-alert",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "email", "audit-alert"]
+            }
+          }
+        },
+        {
+          "name": "Test Email Configuration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"testEmail\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/email/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "email", "test"]
+            }
+          }
+        },
+        {
+          "name": "Get Email Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/email/stats?startDate=2024-01-01&endDate=2024-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "email", "stats"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
