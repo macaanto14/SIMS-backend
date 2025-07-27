@@ -1,8 +1,5 @@
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
--- Example: enable the "uuid-ossp" extension
-create extension "uuid-ossp" with schema dugsinet;
--- Example: disable the "uuid-ossp" extension
 
 CREATE TABLE public.academic_years (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -48,6 +45,73 @@ CREATE TABLE public.attendance (
   CONSTRAINT attendance_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id),
   CONSTRAINT attendance_marked_by_fkey FOREIGN KEY (marked_by) REFERENCES public.users(id)
 );
+CREATE TABLE public.audit_configuration (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  table_name character varying NOT NULL UNIQUE,
+  module character varying NOT NULL,
+  is_enabled boolean DEFAULT true,
+  track_reads boolean DEFAULT false,
+  track_creates boolean DEFAULT true,
+  track_updates boolean DEFAULT true,
+  track_deletes boolean DEFAULT true,
+  sensitive_fields ARRAY DEFAULT '{}'::text[],
+  excluded_fields ARRAY DEFAULT '{}'::text[],
+  retention_days integer DEFAULT 365,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT audit_configuration_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.audit_logs (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  operation_type character varying NOT NULL CHECK (operation_type::text = ANY (ARRAY['CREATE'::character varying, 'UPDATE'::character varying, 'DELETE'::character varying, 'LOGIN'::character varying, 'LOGOUT'::character varying, 'ACCESS'::character varying]::text[])),
+  table_name character varying NOT NULL,
+  record_id uuid,
+  user_id uuid,
+  user_email character varying,
+  user_role character varying,
+  school_id uuid,
+  ip_address inet,
+  user_agent text,
+  module character varying,
+  action character varying,
+  description text,
+  old_values jsonb,
+  new_values jsonb,
+  changed_fields ARRAY,
+  success boolean DEFAULT true,
+  error_message text,
+  duration_ms integer,
+  request_id character varying,
+  session_id character varying,
+  created_at timestamp with time zone DEFAULT now(),
+  school_name text,
+  fields_changed integer DEFAULT 0,
+  CONSTRAINT audit_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_audit_user FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT fk_audit_school FOREIGN KEY (school_id) REFERENCES public.schools(id)
+);
+CREATE TABLE public.billing_invoices (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  school_id uuid NOT NULL,
+  subscription_id uuid NOT NULL,
+  invoice_number character varying NOT NULL UNIQUE,
+  amount numeric NOT NULL,
+  tax_amount numeric DEFAULT 0,
+  total_amount numeric NOT NULL,
+  currency character varying DEFAULT 'USD'::character varying,
+  billing_period_start date NOT NULL,
+  billing_period_end date NOT NULL,
+  due_date date NOT NULL,
+  status character varying DEFAULT 'pending'::character varying CHECK (status::text = ANY (ARRAY['pending'::character varying, 'paid'::character varying, 'overdue'::character varying, 'cancelled'::character varying, 'refunded'::character varying]::text[])),
+  payment_method character varying,
+  payment_reference character varying,
+  paid_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT billing_invoices_pkey PRIMARY KEY (id),
+  CONSTRAINT billing_invoices_school_id_fkey FOREIGN KEY (school_id) REFERENCES public.schools(id),
+  CONSTRAINT billing_invoices_subscription_id_fkey FOREIGN KEY (subscription_id) REFERENCES public.school_subscriptions(id)
+);
 CREATE TABLE public.classes (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   school_id uuid NOT NULL,
@@ -65,6 +129,87 @@ CREATE TABLE public.classes (
   CONSTRAINT classes_school_id_fkey FOREIGN KEY (school_id) REFERENCES public.schools(id),
   CONSTRAINT classes_academic_year_id_fkey FOREIGN KEY (academic_year_id) REFERENCES public.academic_years(id),
   CONSTRAINT classes_class_teacher_id_fkey FOREIGN KEY (class_teacher_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.data_access_logs (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  table_name character varying NOT NULL,
+  record_id uuid,
+  access_type character varying NOT NULL CHECK (access_type::text = ANY (ARRAY['READ'::character varying, 'export'::character varying, 'search'::character varying, 'report'::character varying]::text[])),
+  sensitive_fields ARRAY,
+  query_type character varying,
+  result_count integer,
+  filters_applied jsonb,
+  purpose character varying,
+  ip_address inet,
+  user_agent text,
+  school_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT data_access_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_data_access_user FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT fk_data_access_school FOREIGN KEY (school_id) REFERENCES public.schools(id)
+);
+CREATE TABLE public.email_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  recipient_email character varying NOT NULL,
+  cc_emails text,
+  bcc_emails text,
+  subject character varying NOT NULL,
+  template_name character varying,
+  message_id character varying,
+  tracking_id character varying,
+  status character varying NOT NULL DEFAULT 'sent'::character varying,
+  error_message text,
+  template_data jsonb,
+  sent_at timestamp with time zone DEFAULT now(),
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT email_logs_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.email_preferences (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  notification_type character varying NOT NULL,
+  is_enabled boolean DEFAULT true,
+  frequency character varying DEFAULT 'immediate'::character varying,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT email_preferences_pkey PRIMARY KEY (id),
+  CONSTRAINT email_preferences_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.email_queue (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  recipient_email character varying NOT NULL,
+  cc_emails text,
+  bcc_emails text,
+  subject character varying NOT NULL,
+  template_name character varying,
+  template_data jsonb,
+  priority integer DEFAULT 5,
+  max_attempts integer DEFAULT 3,
+  attempts integer DEFAULT 0,
+  status character varying DEFAULT 'pending'::character varying,
+  scheduled_at timestamp with time zone DEFAULT now(),
+  processed_at timestamp with time zone,
+  error_message text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT email_queue_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.email_templates (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name character varying NOT NULL UNIQUE,
+  subject_template character varying NOT NULL,
+  html_template text NOT NULL,
+  text_template text,
+  description text,
+  variables jsonb,
+  is_active boolean DEFAULT true,
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT email_templates_pkey PRIMARY KEY (id),
+  CONSTRAINT email_templates_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id)
 );
 CREATE TABLE public.enrollments (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -97,6 +242,20 @@ CREATE TABLE public.expenses (
   CONSTRAINT expenses_school_id_fkey FOREIGN KEY (school_id) REFERENCES public.schools(id),
   CONSTRAINT expenses_approved_by_fkey FOREIGN KEY (approved_by) REFERENCES public.users(id),
   CONSTRAINT expenses_recorded_by_fkey FOREIGN KEY (recorded_by) REFERENCES public.users(id)
+);
+CREATE TABLE public.feature_usage (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  school_id uuid NOT NULL,
+  user_id uuid,
+  feature_name character varying NOT NULL,
+  usage_count integer DEFAULT 1,
+  last_used_at timestamp with time zone DEFAULT now(),
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT feature_usage_pkey PRIMARY KEY (id),
+  CONSTRAINT feature_usage_school_id_fkey FOREIGN KEY (school_id) REFERENCES public.schools(id),
+  CONSTRAINT feature_usage_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
 CREATE TABLE public.fee_payments (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -227,6 +386,23 @@ CREATE TABLE public.parent_student_relationships (
   CONSTRAINT parent_student_relationships_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.parent_profiles(id),
   CONSTRAINT parent_student_relationships_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.student_profiles(id)
 );
+CREATE TABLE public.payment_transactions (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  invoice_id uuid NOT NULL,
+  school_id uuid NOT NULL,
+  transaction_id character varying NOT NULL UNIQUE,
+  payment_gateway character varying NOT NULL,
+  amount numeric NOT NULL,
+  currency character varying DEFAULT 'USD'::character varying,
+  status character varying DEFAULT 'pending'::character varying CHECK (status::text = ANY (ARRAY['pending'::character varying, 'processing'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying, 'refunded'::character varying]::text[])),
+  gateway_response jsonb,
+  processed_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT payment_transactions_pkey PRIMARY KEY (id),
+  CONSTRAINT payment_transactions_invoice_id_fkey FOREIGN KEY (invoice_id) REFERENCES public.billing_invoices(id),
+  CONSTRAINT payment_transactions_school_id_fkey FOREIGN KEY (school_id) REFERENCES public.schools(id)
+);
 CREATE TABLE public.permissions (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   module text NOT NULL,
@@ -252,6 +428,26 @@ CREATE TABLE public.roles (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT roles_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.school_subscriptions (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  school_id uuid NOT NULL UNIQUE,
+  plan_id uuid NOT NULL,
+  status character varying DEFAULT 'active'::character varying CHECK (status::text = ANY (ARRAY['trial'::character varying, 'active'::character varying, 'suspended'::character varying, 'cancelled'::character varying, 'expired'::character varying]::text[])),
+  billing_cycle character varying DEFAULT 'monthly'::character varying CHECK (billing_cycle::text = ANY (ARRAY['monthly'::character varying, 'yearly'::character varying]::text[])),
+  start_date date NOT NULL DEFAULT CURRENT_DATE,
+  end_date date NOT NULL,
+  trial_end_date date,
+  auto_renew boolean DEFAULT true,
+  current_students integer DEFAULT 0,
+  current_teachers integer DEFAULT 0,
+  current_classes integer DEFAULT 0,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT school_subscriptions_pkey PRIMARY KEY (id),
+  CONSTRAINT school_subscriptions_school_id_fkey FOREIGN KEY (school_id) REFERENCES public.schools(id),
+  CONSTRAINT school_subscriptions_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.subscription_plans(id)
 );
 CREATE TABLE public.schools (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -316,6 +512,38 @@ CREATE TABLE public.subjects (
   CONSTRAINT subjects_pkey PRIMARY KEY (id),
   CONSTRAINT subjects_school_id_fkey FOREIGN KEY (school_id) REFERENCES public.schools(id)
 );
+CREATE TABLE public.subscription_plans (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  name character varying NOT NULL UNIQUE,
+  description text,
+  price_monthly numeric NOT NULL,
+  price_yearly numeric,
+  max_students integer,
+  max_teachers integer,
+  max_classes integer,
+  features jsonb DEFAULT '{}'::jsonb,
+  is_active boolean DEFAULT true,
+  trial_days integer DEFAULT 30,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT subscription_plans_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.system_events (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  event_type character varying NOT NULL,
+  event_category character varying NOT NULL,
+  severity character varying DEFAULT 'INFO'::character varying CHECK (severity::text = ANY (ARRAY['LOW'::character varying, 'MEDIUM'::character varying, 'HIGH'::character varying, 'CRITICAL'::character varying]::text[])),
+  title character varying NOT NULL,
+  description text,
+  details jsonb,
+  user_id uuid,
+  school_id uuid,
+  ip_address inet,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT system_events_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_system_event_user FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT fk_system_event_school FOREIGN KEY (school_id) REFERENCES public.schools(id)
+);
 CREATE TABLE public.teacher_profiles (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   user_id uuid NOT NULL,
@@ -332,6 +560,20 @@ CREATE TABLE public.teacher_profiles (
   CONSTRAINT teacher_profiles_pkey PRIMARY KEY (id),
   CONSTRAINT teacher_profiles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
   CONSTRAINT teacher_profiles_school_id_fkey FOREIGN KEY (school_id) REFERENCES public.schools(id)
+);
+CREATE TABLE public.tenant_settings (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  school_id uuid NOT NULL,
+  setting_category character varying NOT NULL,
+  setting_key character varying NOT NULL,
+  setting_value jsonb NOT NULL,
+  is_system_setting boolean DEFAULT false,
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT tenant_settings_pkey PRIMARY KEY (id),
+  CONSTRAINT tenant_settings_school_id_fkey FOREIGN KEY (school_id) REFERENCES public.schools(id),
+  CONSTRAINT tenant_settings_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id)
 );
 CREATE TABLE public.terms (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -362,6 +604,17 @@ CREATE TABLE public.timetables (
   CONSTRAINT timetables_subject_id_fkey FOREIGN KEY (subject_id) REFERENCES public.subjects(id),
   CONSTRAINT timetables_teacher_id_fkey FOREIGN KEY (teacher_id) REFERENCES public.teacher_profiles(id)
 );
+CREATE TABLE public.usage_metrics (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  school_id uuid NOT NULL,
+  metric_type character varying NOT NULL,
+  metric_value integer NOT NULL,
+  recorded_date date NOT NULL DEFAULT CURRENT_DATE,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT usage_metrics_pkey PRIMARY KEY (id),
+  CONSTRAINT usage_metrics_school_id_fkey FOREIGN KEY (school_id) REFERENCES public.schools(id)
+);
 CREATE TABLE public.user_roles (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   user_id uuid NOT NULL,
@@ -379,6 +632,24 @@ CREATE TABLE public.user_roles (
   CONSTRAINT user_roles_assigned_by_fkey FOREIGN KEY (assigned_by) REFERENCES public.users(id),
   CONSTRAINT fk_user_roles_school_id FOREIGN KEY (school_id) REFERENCES public.schools(id)
 );
+CREATE TABLE public.user_sessions (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  session_token character varying NOT NULL UNIQUE,
+  ip_address inet,
+  user_agent text,
+  login_at timestamp with time zone DEFAULT now(),
+  logout_at timestamp with time zone,
+  is_active boolean DEFAULT true,
+  last_activity timestamp with time zone DEFAULT now(),
+  school_id uuid,
+  login_method character varying DEFAULT 'password'::character varying,
+  device_info jsonb,
+  location_info jsonb,
+  CONSTRAINT user_sessions_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_session_user FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT fk_session_school FOREIGN KEY (school_id) REFERENCES public.schools(id)
+);
 CREATE TABLE public.users (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   email text NOT NULL UNIQUE,
@@ -390,5 +661,6 @@ CREATE TABLE public.users (
   last_login_at timestamp with time zone,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  password_hash text,
   CONSTRAINT users_pkey PRIMARY KEY (id)
 );

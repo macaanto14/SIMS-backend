@@ -70,3 +70,33 @@ async function runMigration() {
 }
 runMigration();
 "
+
+
+# How to Run Tests:
+# Install missing dependencies first
+npm install axios
+
+# Run all tests
+npm run test:all
+
+# Run specific test types
+npm run test:unit          # Jest unit tests
+npm run test:manual        # Manual endpoint tests with detailed logging
+npm run test:performance   # Performance benchmarking
+npm run test:cleanup       # Clean test data
+
+# Or use the batch file on Windows
+scripts\run-tests.bat
+
+
+npm run test:manual
+
+node test-endpoints-simple.js
+
+node debug-startup.js
+
+scripts\setup-local-db.bat
+
+node scripts/test-local-connection.js
+
+npm start
