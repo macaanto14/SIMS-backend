@@ -100,3 +100,5 @@ scripts\setup-local-db.bat
 node scripts/test-local-connection.js
 
 npm start
+
+node scripts/setup-rbac-tables.js
