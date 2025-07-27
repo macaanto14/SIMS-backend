@@ -171,6 +171,14 @@ const login = async (req, res) => {
     
     if (userResult.rows.length === 0) {
       // Log failed login attempt - user not found
+      // Fix all logAuthEvent calls - change from:
+      // logAuthEvent(userId, eventType, success, message, details)
+      // to:
+      // logAuthEvent(eventType, userId, details)
+      
+      // Example fixes:
+      
+      // BEFORE (incorrect):
       await logAuthEvent(
         null,
         'LOGIN',
@@ -179,6 +187,62 @@ const login = async (req, res) => {
         {
           email,
           reason: 'user_not_found',
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent')
+        }
+      );
+      
+      // AFTER (correct):
+      await logAuthEvent(
+        'LOGIN',
+        null,
+        {
+          email,
+          reason: 'user_not_found',
+          success: false,
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent')
+        }
+      );
+      
+      // BEFORE (incorrect):
+      await logAuthEvent(
+        user.id,
+        'LOGIN',
+        true,
+        'User logged in successfully',
+        {
+          email: user.email,
+          roles: roles.map(r => r.roleName),
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent'),
+          sessionStart: new Date()
+        }
+      );
+      
+      // AFTER (correct):
+      await logAuthEvent(
+        'LOGIN',
+        user.id,
+        {
+          email: user.email,
+          roles: roles.map(r => r.roleName),
+          success: true,
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent'),
+          sessionStart: new Date()
+        }
+      );
+      
+      // Log failed login attempt - invalid password
+      await logAuthEvent(
+        user.id,
+        'LOGIN',
+        false,
+        'Login failed - invalid password',
+        {
+          email,
+          reason: 'invalid_password',
           ipAddress: req.ip,
           userAgent: req.get('User-Agent')
         }
