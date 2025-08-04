@@ -1,0 +1,238 @@
+{
+  "info": {
+    "name": "SIMS SMS Service - Ethiopian Phone Numbers",
+    "description": "Test collection for SMS service with Ethiopian phone number support",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "ethiopian_phone_9digit",
+      "value": "927802065"
+    },
+    {
+      "key": "ethiopian_phone_10digit",
+      "value": "0927802065"
+    },
+    {
+      "key": "ethiopian_phone_12digit",
+      "value": "251927802065"
+    },
+    {
+      "key": "verification_code",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/health",
+          "host": ["{{base_url}}"],
+          "path": ["api", "health"]
+        }
+      }
+    },
+    {
+      "name": "Send Verification - 9 Digit Format",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phoneNumber\": \"{{ethiopian_phone_9digit}}\",\n  \"purpose\": \"verification\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/sms/send-verification",
+          "host": ["{{base_url}}"],
+          "path": ["api", "sms", "send-verification"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has success field\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('success');",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Response contains Twilio SID\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.have.property('sid');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Send Verification - 10 Digit Format",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phoneNumber\": \"{{ethiopian_phone_10digit}}\",\n  \"purpose\": \"verification\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/sms/send-verification",
+          "host": ["{{base_url}}"],
+          "path": ["api", "sms", "send-verification"]
+        }
+      }
+    },
+    {
+      "name": "Send Verification - 12 Digit Format",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phoneNumber\": \"{{ethiopian_phone_12digit}}\",\n  \"purpose\": \"verification\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/sms/send-verification",
+          "host": ["{{base_url}}"],
+          "path": ["api", "sms", "send-verification"]
+        }
+      }
+    },
+    {
+      "name": "Verify Code - 9 Digit Format",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phoneNumber\": \"{{ethiopian_phone_9digit}}\",\n  \"code\": \"{{verification_code}}\",\n  \"purpose\": \"verification\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/sms/verify-code",
+          "host": ["{{base_url}}"],
+          "path": ["api", "sms", "verify-code"]
+        }
+      }
+    },
+    {
+      "name": "Check Status - Backend Format",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer YOUR_TOKEN_HERE"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/sms/status/{{ethiopian_phone_12digit}}/verification",
+          "host": ["{{base_url}}"],
+          "path": ["api", "sms", "status", "{{ethiopian_phone_12digit}}", "verification"]
+        }
+      }
+    },
+    {
+      "name": "Invalid Phone Number Test",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phoneNumber\": \"827802065\",\n  \"purpose\": \"verification\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/sms/send-verification",
+          "host": ["{{base_url}}"],
+          "path": ["api", "sms", "send-verification"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400 for invalid phone\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test(\"Error message mentions invalid phone\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.message).to.include('Invalid phone number');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phone Format Consistency Test",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Test that all formats resolve to the same backend format",
+              "const formats = ['927802065', '0927802065', '251927802065'];",
+              "pm.globals.set('test_formats', JSON.stringify(formats));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phoneNumber\": \"927802065\",\n  \"purpose\": \"test\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/sms/send-verification",
+          "host": ["{{base_url}}"],
+          "path": ["api", "sms", "send-verification"]
+        }
+      }
+    }
+  ]
+}

@@ -16,7 +16,7 @@ const {
   getUserActivitySummary,
   getSystemActivityDashboard,
   exportAuditLogs
-} = require('../controllers/auditController'); // This path is correct
+} = require('../controllers/auditController');
 const { authenticateToken } = require('../middleware/auth');
 const { requireRole } = require('../middleware/rbac');
 const { validatePagination, handleValidationErrors } = require('../middleware/validation');

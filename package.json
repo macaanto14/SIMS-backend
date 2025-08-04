@@ -29,7 +29,9 @@
     "docs:deploy": "npm run docs:build && npm run deploy:docs",
     "docs:check": "node scripts/check-docs.js",
     "email:setup": "node scripts/setup-email-system.js",
-    "email:test": "node scripts/test-email-system.js"
+    "email:test": "node scripts/test-email-system.js",
+    "sms:setup": "node scripts/setup-sms-system.js",
+    "sms:test": "node scripts/test-sms-system.js"
   },
   "keywords": [
     "school-management",
@@ -47,6 +49,7 @@
     "bcryptjs": "^3.0.2",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
     "express-rate-limit": "^8.0.1",
@@ -54,6 +57,7 @@
     "handlebars": "^4.7.8",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "libphonenumber-js": "^1.10.51",
     "morgan": "^1.10.1",
     "nodemailer": "^6.9.8",
     "pg": "^8.16.3",
@@ -62,6 +66,7 @@
     "redoc-express": "^2.1.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
+    "twilio": "^4.19.3",
     "uuid": "^11.1.0",
     "winston": "^3.11.0"
   },

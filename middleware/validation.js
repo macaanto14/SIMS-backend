@@ -1,4 +1,5 @@
 const { body, param, query, validationResult } = require('express-validator');
+const phoneValidationService = require('../services/phoneValidationService');
 
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
@@ -9,6 +10,17 @@ const handleValidationErrors = (req, res, next) => {
     });
   }
   next();
+};
+
+// Custom phone number validator for Ethiopian numbers
+const validateEthiopianPhone = (fieldName = 'phoneNumber') => {
+  return body(fieldName).custom((value) => {
+    const validationResult = phoneValidationService.validatePhoneNumber(value);
+    if (!validationResult.isValid) {
+      throw new Error(validationResult.error);
+    }
+    return true;
+  });
 };
 
 // Common validation rules
@@ -33,7 +45,15 @@ const validateUserRegistration = () => [
   validatePassword(),
   body('first_name').trim().isLength({ min: 1 }).withMessage('First name is required'),
   body('last_name').trim().isLength({ min: 1 }).withMessage('Last name is required'),
-  body('phone').optional().isMobilePhone().withMessage('Valid phone number required')
+  body('phone').optional().custom((value) => {
+    if (value) {
+      const validationResult = phoneValidationService.validatePhoneNumber(value);
+      if (!validationResult.isValid) {
+        throw new Error(validationResult.error);
+      }
+    }
+    return true;
+  })
 ];
 
 const validateUserLogin = () => [
@@ -46,7 +66,15 @@ const validateSchool = () => [
   body('name').trim().isLength({ min: 1 }).withMessage('School name is required'),
   body('code').trim().isLength({ min: 2, max: 10 }).withMessage('School code must be 2-10 characters'),
   body('email').optional().isEmail().normalizeEmail(),
-  body('phone').optional().isMobilePhone()
+  body('phone').optional().custom((value) => {
+    if (value) {
+      const validationResult = phoneValidationService.validatePhoneNumber(value);
+      if (!validationResult.isValid) {
+        throw new Error(validationResult.error);
+      }
+    }
+    return true;
+  })
 ];
 
 // Academic validation
@@ -89,6 +117,30 @@ const validateBook = () => [
   body('copies_total').optional().isInt({ min: 1 })
 ];
 
+// SMS validation - Updated for Ethiopian phone numbers
+const validateSMSRequest = () => [
+  validateEthiopianPhone('phoneNumber'),
+  body('purpose')
+    .isIn(['registration', 'login', 'password_reset', 'two_factor', 'verification'])
+    .withMessage('Purpose must be one of: registration, login, password_reset, two_factor, verification'),
+  body('twilioConfig').optional().isObject().withMessage('Twilio config must be an object'),
+  body('twilioConfig.accountSid').optional().isString().withMessage('Account SID must be a string'),
+  body('twilioConfig.authToken').optional().isString().withMessage('Auth token must be a string'),
+  body('twilioConfig.serviceSid').optional().isString().withMessage('Service SID must be a string')
+];
+
+const validateSMSVerification = () => [
+  validateEthiopianPhone('phoneNumber'),
+  body('code')
+    .isLength({ min: 4, max: 8 })
+    .isNumeric()
+    .withMessage('Verification code must be 4-8 digits'),
+  body('purpose')
+    .isIn(['registration', 'login', 'password_reset', 'two_factor', 'verification'])
+    .withMessage('Purpose must be one of: registration, login, password_reset, two_factor, verification'),
+  body('twilioConfig').optional().isObject().withMessage('Twilio config must be an object')
+];
+
 module.exports = {
   handleValidationErrors,
   validateUUID,
@@ -100,5 +152,8 @@ module.exports = {
   validateClass,
   validateAttendance,
   validateFeeStructure,
-  validateBook
+  validateBook,
+  validateSMSRequest,
+  validateSMSVerification,
+  validateEthiopianPhone
 };

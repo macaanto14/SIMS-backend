@@ -410,9 +410,155 @@ const assignRole = async (req, res) => {
   }
 };
 
+const loginSMS = async (req, res) => {
+  try {
+    const { phoneNumber, code, twilioConfig } = req.body;
+    
+    // Verify SMS code first
+    const phoneHash = phoneValidationService.hashPhoneNumber(phoneNumber);
+    
+    const verificationResult = await pool.query(
+      `SELECT * FROM sms_verifications 
+       WHERE phone_number_hash = $1 AND purpose = 'login' AND status = 'verified' 
+       AND verified_at > NOW() - INTERVAL '5 minutes'`,
+      [phoneHash]
+    );
+    
+    if (verificationResult.rows.length === 0) {
+      return errorResponse(res, 'SMS verification required or expired', 401);
+    }
+    
+    // Find user by phone number
+    const userResult = await pool.query(
+      `SELECT u.id, u.email, u.first_name, u.last_name, u.is_active, u.phone,
+              ur.role_id, r.name as role_name, ur.school_id, s.name as school_name
+       FROM users u
+       LEFT JOIN user_roles ur ON u.id = ur.user_id AND ur.is_active = true
+       LEFT JOIN roles r ON ur.role_id = r.id
+       LEFT JOIN schools s ON ur.school_id = s.id
+       WHERE u.phone = $1 AND u.is_active = true`,
+      [phoneNumber]
+    );
+    
+    if (userResult.rows.length === 0) {
+      await logAuthEvent('SMS_LOGIN', null, {
+        phoneNumber: phoneHash,
+        reason: 'user_not_found',
+        success: false,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+      return errorResponse(res, 'No account found with this phone number', 404);
+    }
+    
+    const user = userResult.rows[0];
+    
+    // Mark verification as used
+    await pool.query(
+      `UPDATE sms_verifications SET status = 'used' WHERE phone_number_hash = $1 AND purpose = 'login'`,
+      [phoneHash]
+    );
+    
+    // Log successful login
+    await logAuthEvent('SMS_LOGIN', user.id, {
+      phoneNumber: phoneHash,
+      success: true,
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent')
+    });
+    
+    // Generate JWT token
+    const token = generateToken({ 
+      userId: user.id, 
+      email: user.email,
+      phone: user.phone 
+    });
+    
+    successResponse(res, {
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        phone: user.phone,
+        role: user.role_name,
+        schoolId: user.school_id,
+        schoolName: user.school_name
+      },
+      token
+    }, 'SMS login successful');
+    
+  } catch (error) {
+    console.error('SMS login error:', error);
+    errorResponse(res, 'SMS login failed', 500);
+  }
+};
+
+const resetPasswordSMS = async (req, res) => {
+  try {
+    const { phoneNumber, code, newPassword, twilioConfig } = req.body;
+    
+    // Verify SMS code first
+    const phoneHash = phoneValidationService.hashPhoneNumber(phoneNumber);
+    
+    const verificationResult = await pool.query(
+      `SELECT * FROM sms_verifications 
+       WHERE phone_number_hash = $1 AND purpose = 'password_reset' AND status = 'verified' 
+       AND verified_at > NOW() - INTERVAL '15 minutes'`,
+      [phoneHash]
+    );
+    
+    if (verificationResult.rows.length === 0) {
+      return errorResponse(res, 'SMS verification required or expired', 401);
+    }
+    
+    // Find user by phone number
+    const userResult = await pool.query(
+      `SELECT id, email, phone FROM users WHERE phone = $1 AND is_active = true`,
+      [phoneNumber]
+    );
+    
+    if (userResult.rows.length === 0) {
+      return errorResponse(res, 'No account found with this phone number', 404);
+    }
+    
+    const user = userResult.rows[0];
+    
+    // Hash new password
+    const hashedPassword = await hashPassword(newPassword);
+    
+    // Update password
+    await pool.query(
+      `UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2`,
+      [hashedPassword, user.id]
+    );
+    
+    // Mark verification as used
+    await pool.query(
+      `UPDATE sms_verifications SET status = 'used' WHERE phone_number_hash = $1 AND purpose = 'password_reset'`,
+      [phoneHash]
+    );
+    
+    // Log password reset
+    await logAuthEvent('PASSWORD_RESET_SMS', user.id, {
+      phoneNumber: phoneHash,
+      success: true,
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent')
+    });
+    
+    successResponse(res, null, 'Password reset successful');
+    
+  } catch (error) {
+    console.error('SMS password reset error:', error);
+    errorResponse(res, 'Password reset failed', 500);
+  }
+};
+
 module.exports = {
   register,
   login,
   getProfile,
-  assignRole
+  loginSMS,
+  resetPasswordSMS
 };

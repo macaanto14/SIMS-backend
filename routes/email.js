@@ -1,18 +1,9 @@
-/**
- * Email Routes
- * 
- * Defines API endpoints for email notification functionality
- * 
- * @author SIMS Development Team
- * @version 1.0.0
- */
-
 const express = require('express');
 const router = express.Router();
 const EmailController = require('../controllers/emailController');
 const auth = require('../middleware/auth');
 const { body, query } = require('express-validator');
-const validate = require('../middleware/validation');
+const { handleValidationErrors: validate } = require('../middleware/validation');
 
 /**
  * @swagger
