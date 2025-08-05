@@ -14,11 +14,19 @@ const typeorm_1 = require("typeorm");
 const BaseEntity_1 = require("./base/BaseEntity");
 const School_1 = require("./School");
 const Class_1 = require("./Class");
+const Term_1 = require("./Term");
+const FeeStructure_1 = require("./FeeStructure");
 let AcademicYear = class AcademicYear extends BaseEntity_1.BaseEntity {
     get displayName() {
+        if (!this.startDate || !this.endDate) {
+            return this.name;
+        }
         return `${this.name} (${this.startDate.getFullYear()}-${this.endDate.getFullYear()})`;
     }
     get isCurrentPeriod() {
+        if (!this.startDate || !this.endDate) {
+            return false;
+        }
         const now = new Date();
         return now >= this.startDate && now <= this.endDate;
     }
@@ -29,23 +37,19 @@ __decorate([
     __metadata("design:type", String)
 ], AcademicYear.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'date' }),
+    (0, typeorm_1.Column)({ type: 'date', name: 'start_date' }),
     __metadata("design:type", Date)
 ], AcademicYear.prototype, "startDate", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'date' }),
+    (0, typeorm_1.Column)({ type: 'date', name: 'end_date' }),
     __metadata("design:type", Date)
 ], AcademicYear.prototype, "endDate", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'boolean', default: false }),
+    (0, typeorm_1.Column)({ type: 'boolean', default: false, name: 'is_current' }),
     __metadata("design:type", Boolean)
 ], AcademicYear.prototype, "isCurrent", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'jsonb', default: {} }),
-    __metadata("design:type", Object)
-], AcademicYear.prototype, "metadata", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'uuid' }),
+    (0, typeorm_1.Column)({ type: 'uuid', name: 'school_id' }),
     __metadata("design:type", String)
 ], AcademicYear.prototype, "schoolId", void 0);
 __decorate([
@@ -57,6 +61,14 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => Class_1.Class, classEntity => classEntity.academicYear),
     __metadata("design:type", Array)
 ], AcademicYear.prototype, "classes", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => Term_1.Term, term => term.academicYear),
+    __metadata("design:type", Array)
+], AcademicYear.prototype, "terms", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => FeeStructure_1.FeeStructure, feeStructure => feeStructure.academicYear),
+    __metadata("design:type", Array)
+], AcademicYear.prototype, "feeStructures", void 0);
 exports.AcademicYear = AcademicYear = __decorate([
     (0, typeorm_1.Entity)('academic_years'),
     (0, typeorm_1.Index)(['schoolId']),

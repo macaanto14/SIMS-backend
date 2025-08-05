@@ -34,8 +34,25 @@ export class AuditService {
 
   async logAuthEvent(action: string, userId: string | null, data: AuthEventData): Promise<void> {
     try {
+      // Map auth actions to valid OperationType values
+      let operationType: OperationType;
+      switch (action.toUpperCase()) {
+        case 'LOGIN':
+          operationType = OperationType.LOGIN;
+          break;
+        case 'LOGOUT':
+          operationType = OperationType.LOGOUT;
+          break;
+        case 'REGISTER':
+        case 'CREATE':
+          operationType = OperationType.CREATE;
+          break;
+        default:
+          operationType = OperationType.ACCESS;
+      }
+
       const auditLog = this.auditRepository.create({
-        operationType: action as OperationType,
+        operationType,
         tableName: 'auth',
         recordId: null,
         userId,
@@ -172,8 +189,25 @@ export class AuditService {
     details?: any;
   }): Promise<void> {
     try {
+      // Map database operations to valid OperationType values
+      let operationType: OperationType;
+      switch (data.operation.toUpperCase()) {
+        case 'CREATE':
+        case 'INSERT':
+          operationType = OperationType.CREATE;
+          break;
+        case 'UPDATE':
+          operationType = OperationType.UPDATE;
+          break;
+        case 'DELETE':
+          operationType = OperationType.DELETE;
+          break;
+        default:
+          operationType = OperationType.ACCESS;
+      }
+
       const auditLog = this.auditRepository.create({
-        operationType: data.operation.toUpperCase() as OperationType,
+        operationType,
         tableName: data.table,
         recordId: null,
         userId: data.userId || null,

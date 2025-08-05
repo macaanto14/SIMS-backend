@@ -84,9 +84,9 @@ async function setupAuditTestData() {
       SELECT 
         operation_type, table_name, user_email, user_role, 
         school_name, ip_address, user_agent, request_id,
-        success, fields_changed, created_at
+        success, fields_changed, createdAt
       FROM audit_logs 
-      ORDER BY created_at DESC 
+      ORDER BY createdAt DESC 
       LIMIT 1
     `);
     

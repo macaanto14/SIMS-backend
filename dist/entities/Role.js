@@ -11,15 +11,18 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Role = void 0;
 const typeorm_1 = require("typeorm");
-const BaseEntity_1 = require("./base/BaseEntity");
 const UserRole_1 = require("./UserRole");
 const RolePermission_1 = require("./RolePermission");
-let Role = class Role extends BaseEntity_1.BaseEntity {
+let Role = class Role {
     get displayName() {
         return this.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
 };
 exports.Role = Role;
+__decorate([
+    (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
+    __metadata("design:type", String)
+], Role.prototype, "id", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 100, unique: true }),
     __metadata("design:type", String)
@@ -37,9 +40,27 @@ __decorate([
     __metadata("design:type", Number)
 ], Role.prototype, "priority", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'jsonb', default: {} }),
+    (0, typeorm_1.Column)({ type: 'jsonb', default: '{}' }),
     __metadata("design:type", Object)
 ], Role.prototype, "metadata", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: true }),
+    __metadata("design:type", Boolean)
+], Role.prototype, "isActive", void 0);
+__decorate([
+    (0, typeorm_1.CreateDateColumn)({
+        type: 'timestamptz',
+        default: () => 'CURRENT_TIMESTAMP',
+    }),
+    __metadata("design:type", Date)
+], Role.prototype, "createdAt", void 0);
+__decorate([
+    (0, typeorm_1.UpdateDateColumn)({
+        type: 'timestamptz',
+        default: () => 'CURRENT_TIMESTAMP',
+    }),
+    __metadata("design:type", Date)
+], Role.prototype, "updatedAt", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => UserRole_1.UserRole, userRole => userRole.role),
     __metadata("design:type", Array)

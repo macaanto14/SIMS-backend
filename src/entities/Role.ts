@@ -12,18 +12,28 @@ import { RolePermission } from './RolePermission';
 
 @Entity('roles')
 @Index(['name'], { unique: true })
+@Index(['isActive'])
 export class Role {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: 'text', unique: true })
+  @Column({ type: 'varchar', length: 100, unique: true })
   name!: string;
 
-  @Column({ type: 'text' })
-  description!: string;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  description!: string | null;
 
-  @Column({ type: 'boolean', default: false })
-  isSystemRole!: boolean;
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  level!: string | null;
+
+  @Column({ type: 'integer', default: 0 })
+  priority!: number;
+
+  @Column({ type: 'jsonb', default: '{}' })
+  metadata!: any;
+
+  @Column({ type: 'boolean', default: true })
+  isActive!: boolean;
 
   @CreateDateColumn({
     type: 'timestamptz',

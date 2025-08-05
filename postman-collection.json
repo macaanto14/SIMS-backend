@@ -1,0 +1,1486 @@
+{
+  "info": {
+    "name": "SIMS Backend API - Complete Collection",
+    "description": "Complete API collection for School Information Management System with sample data",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "school_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "academic_year_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "class_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login Super Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('auth_token', response.token);",
+                  "    pm.collectionVariables.set('user_id', response.user.id);",
+                  "    if (response.user.school) {",
+                  "        pm.collectionVariables.set('school_id', response.user.school.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"superadmin@sims.edu\",\n  \"password\": \"SuperAdmin@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Register School Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@greenwood.edu\",\n  \"password\": \"Admin@123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"phone\": \"+1234567890\",\n  \"schoolData\": {\n    \"name\": \"Greenwood High School\",\n    \"code\": \"GHS001\",\n    \"address\": \"123 Education Street, Learning City, LC 12345\",\n    \"phone\": \"+1234567890\",\n    \"email\": \"info@greenwood.edu\",\n    \"website\": \"https://greenwood.edu\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Schools Management",
+      "item": [
+        {
+          "name": "Get All Schools",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/schools",
+              "host": ["{{base_url}}"],
+              "path": ["api", "schools"]
+            }
+          }
+        },
+        {
+          "name": "Get School by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/schools/{{school_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "schools", "{{school_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create School",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Riverside Elementary School\",\n  \"code\": \"RES001\",\n  \"address\": \"456 River Road, Riverside, RS 67890\",\n  \"phone\": \"+1987654321\",\n  \"email\": \"info@riverside.edu\",\n  \"website\": \"https://riverside.edu\",\n  \"logoUrl\": \"https://riverside.edu/logo.png\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/schools",
+              "host": ["{{base_url}}"],
+              "path": ["api", "schools"]
+            }
+          }
+        },
+        {
+          "name": "Update School",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Greenwood High School - Updated\",\n  \"website\": \"https://new-greenwood.edu\",\n  \"logoUrl\": \"https://new-greenwood.edu/logo.png\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/schools/{{school_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "schools", "{{school_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete School",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/schools/{{school_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "schools", "{{school_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Academic Years Management",
+      "item": [
+        {
+          "name": "Get Academic Years by School",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/academic-years/school/{{school_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "academic-years", "school", "{{school_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Current Academic Year",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.id) {",
+                  "        pm.collectionVariables.set('academic_year_id', response.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/academic-years/school/{{school_id}}/current",
+              "host": ["{{base_url}}"],
+              "path": ["api", "academic-years", "school", "{{school_id}}", "current"]
+            }
+          }
+        },
+        {
+          "name": "Create Academic Year",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('academic_year_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Academic Year 2024-2025\",\n  \"startDate\": \"2024-09-01\",\n  \"endDate\": \"2025-06-30\",\n  \"isCurrent\": true,\n  \"schoolId\": \"{{school_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/academic-years",
+              "host": ["{{base_url}}"],
+              "path": ["api", "academic-years"]
+            }
+          }
+        },
+        {
+          "name": "Update Academic Year",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Academic Year 2024-2025 (Updated)\",\n  \"endDate\": \"2025-07-15\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/academic-years/{{academic_year_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "academic-years", "{{academic_year_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Set Current Academic Year",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/academic-years/{{academic_year_id}}/set-current",
+              "host": ["{{base_url}}"],
+              "path": ["api", "academic-years", "{{academic_year_id}}", "set-current"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Classes Management",
+      "item": [
+        {
+          "name": "Get Classes by School",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/classes/school/{{school_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "classes", "school", "{{school_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Classes by Academic Year",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/classes/academic-year/{{academic_year_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "classes", "academic-year", "{{academic_year_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Class by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/classes/{{class_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "classes", "{{class_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Class",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('class_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Grade 10\",\n  \"gradeLevel\": 10,\n  \"section\": \"A\",\n  \"maxStudents\": 35,\n  \"roomNumber\": \"101\",\n  \"schoolId\": \"{{school_id}}\",\n  \"academicYearId\": \"{{academic_year_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/classes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "classes"]
+            }
+          }
+        },
+        {
+          "name": "Update Class",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"maxStudents\": 40,\n  \"roomNumber\": \"102\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/classes/{{class_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "classes", "{{class_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Class",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/classes/{{class_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "classes", "{{class_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Class Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/classes/school/{{school_id}}/statistics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "classes", "school", "{{school_id}}", "statistics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Teachers Management",
+      "item": [
+        {
+          "name": "Get Teachers by School",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/school/{{school_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "school", "{{school_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Teacher by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/{{teacher_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "{{teacher_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Teacher",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('teacher_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userData\": {\n    \"email\": \"sarah.johnson@greenwood.edu\",\n    \"firstName\": \"Sarah\",\n    \"lastName\": \"Johnson\",\n    \"phone\": \"+1234567891\"\n  },\n  \"teacherData\": {\n    \"schoolId\": \"{{school_id}}\",\n    \"employeeId\": \"TCH001\",\n    \"hireDate\": \"2023-08-15\",\n    \"qualification\": \"M.Ed in Mathematics\",\n    \"specialization\": \"Mathematics\",\n    \"experienceYears\": 5,\n    \"salary\": 55000\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers"]
+            }
+          }
+        },
+        {
+          "name": "Update Teacher",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qualification\": \"Ph.D in Mathematics\",\n  \"experienceYears\": 6,\n  \"salary\": 60000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/{{teacher_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "{{teacher_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Teachers by Specialization",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/school/{{school_id}}/specialization/Mathematics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "school", "{{school_id}}", "specialization", "Mathematics"]
+            }
+          }
+        },
+        {
+          "name": "Delete Teacher",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/{{teacher_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "{{teacher_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Students Management",
+      "item": [
+        {
+          "name": "Get Students by School",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/students/school/{{school_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "students", "school", "{{school_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Students by Class",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/students/class/{{class_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "students", "class", "{{class_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Student by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/students/{{student_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "students", "{{student_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('student_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userData\": {\n    \"email\": \"alex.wilson@student.greenwood.edu\",\n    \"firstName\": \"Alex\",\n    \"lastName\": \"Wilson\",\n    \"phone\": \"+1234567894\"\n  },\n  \"studentData\": {\n    \"schoolId\": \"{{school_id}}\",\n    \"classId\": \"{{class_id}}\",\n    \"studentId\": \"STU001\",\n    \"admissionNumber\": \"GHS2024001\",\n    \"admissionDate\": \"2024-09-01\",\n    \"dateOfBirth\": \"2008-05-15\",\n    \"gender\": \"male\",\n    \"bloodGroup\": \"O+\",\n    \"address\": \"789 Student Lane, Learning City, LC 12345\",\n    \"emergencyContactName\": \"Jane Wilson\",\n    \"emergencyContactPhone\": \"+1234567895\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/students",
+              "host": ["{{base_url}}"],
+              "path": ["api", "students"]
+            }
+          }
+        },
+        {
+          "name": "Update Student",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classId\": \"{{class_id}}\",\n  \"address\": \"Updated Address, Learning City, LC 12345\",\n  \"emergencyContactPhone\": \"+1234567999\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/students/{{student_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "students", "{{student_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Student",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/students/{{student_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "students", "{{student_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subjects Management",
+      "item": [
+        {
+          "name": "Get Subjects by School",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/subjects/school/{{school_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subjects", "school", "{{school_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Subject by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/subjects/{{subject_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subjects", "{{subject_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Subject",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('subject_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mathematics\",\n  \"code\": \"MATH101\",\n  \"description\": \"Advanced Mathematics for Grade 10\",\n  \"schoolId\": \"{{school_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subjects",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subjects"]
+            }
+          }
+        },
+        {
+          "name": "Update Subject",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Advanced Mathematics for Grade 10 - Updated Curriculum\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subjects/{{subject_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subjects", "{{subject_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Subject",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/subjects/{{subject_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subjects", "{{subject_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Terms Management",
+      "item": [
+        {
+          "name": "Get Terms by Academic Year",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/terms/academic-year/{{academic_year_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "terms", "academic-year", "{{academic_year_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Current Term",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.id) {",
+                  "        pm.collectionVariables.set('term_id', response.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/terms/academic-year/{{academic_year_id}}/current",
+              "host": ["{{base_url}}"],
+              "path": ["api", "terms", "academic-year", "{{academic_year_id}}", "current"]
+            }
+          }
+        },
+        {
+          "name": "Create Term",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('term_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"First Term\",\n  \"startDate\": \"2024-09-01\",\n  \"endDate\": \"2024-12-15\",\n  \"isCurrent\": true,\n  \"academicYearId\": \"{{academic_year_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/terms",
+              "host": ["{{base_url}}"],
+              "path": ["api", "terms"]
+            }
+          }
+        },
+        {
+          "name": "Update Term",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"endDate\": \"2024-12-20\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/terms/{{term_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "terms", "{{term_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Set Current Term",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/terms/{{term_id}}/set-current",
+              "host": ["{{base_url}}"],
+              "path": ["api", "terms", "{{term_id}}", "set-current"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attendance Management",
+      "item": [
+        {
+          "name": "Get Attendance by Student",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/attendance/student/{{student_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "attendance", "student", "{{student_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Attendance by Class and Date",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/attendance/class/{{class_id}}/date/2024-11-15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "attendance", "class", "{{class_id}}", "date", "2024-11-15"]
+            }
+          }
+        },
+        {
+          "name": "Mark Attendance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{student_id}}\",\n  \"classId\": \"{{class_id}}\",\n  \"date\": \"2024-11-15\",\n  \"status\": \"present\",\n  \"markedBy\": \"{{teacher_id}}\",\n  \"notes\": \"On time\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/attendance",
+              "host": ["{{base_url}}"],
+              "path": ["api", "attendance"]
+            }
+          }
+        },
+        {
+          "name": "Mark Bulk Attendance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classId\": \"{{class_id}}\",\n  \"date\": \"2024-11-15\",\n  \"markedBy\": \"{{teacher_id}}\",\n  \"attendanceRecords\": [\n    {\n      \"studentId\": \"{{student_id}}\",\n      \"status\": \"present\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/attendance/bulk",
+              "host": ["{{base_url}}"],
+              "path": ["api", "attendance", "bulk"]
+            }
+          }
+        },
+        {
+          "name": "Get Attendance Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/attendance/class/{{class_id}}/statistics?startDate=2024-09-01&endDate=2024-12-15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "attendance", "class", "{{class_id}}", "statistics"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-09-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-15"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grades Management",
+      "item": [
+        {
+          "name": "Get Grades by Student",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/grades/student/{{student_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "grades", "student", "{{student_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Grades by Student and Term",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/grades/student/{{student_id}}/term/{{term_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "grades", "student", "{{student_id}}", "term", "{{term_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Grades by Subject and Term",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/grades/subject/{{subject_id}}/term/{{term_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "grades", "subject", "{{subject_id}}", "term", "{{term_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Grade",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{student_id}}\",\n  \"subjectId\": \"{{subject_id}}\",\n  \"termId\": \"{{term_id}}\",\n  \"assessmentType\": \"exam\",\n  \"assessmentName\": \"Mid-term Exam\",\n  \"marksObtained\": 85,\n  \"totalMarks\": 100,\n  \"grade\": \"A\",\n  \"remarks\": \"Excellent performance\",\n  \"assessedBy\": \"{{teacher_id}}\",\n  \"assessmentDate\": \"2024-11-15\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/grades",
+              "host": ["{{base_url}}"],
+              "path": ["api", "grades"]
+            }
+          }
+        },
+        {
+          "name": "Update Grade",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"marksObtained\": 90,\n  \"grade\": \"A+\",\n  \"remarks\": \"Outstanding performance\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/grades/{{grade_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "grades", "{{grade_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Calculate Student GPA",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/grades/student/{{student_id}}/term/{{term_id}}/gpa",
+              "host": ["{{base_url}}"],
+              "path": ["api", "grades", "student", "{{student_id}}", "term", "{{term_id}}", "gpa"]
+            }
+          }
+        },
+        {
+          "name": "Get Class Grade Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/grades/class/{{class_id}}/term/{{term_id}}/statistics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "grades", "class", "{{class_id}}", "term", "{{term_id}}", "statistics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fee Management",
+      "item": [
+        {
+          "name": "Get Fee Structures by School",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/fees/structures/school/{{school_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "fees", "structures", "school", "{{school_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Fee Structure",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('fee_structure_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolId\": \"{{school_id}}\",\n  \"academicYearId\": \"{{academic_year_id}}\",\n  \"classId\": \"{{class_id}}\",\n  \"feeType\": \"Tuition Fee\",\n  \"amount\": 5000,\n  \"frequency\": \"monthly\",\n  \"dueDateRule\": \"5th of every month\",\n  \"isMandatory\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/fees/structures",
+              "host": ["{{base_url}}"],
+              "path": ["api", "fees", "structures"]
+            }
+          }
+        },
+        {
+          "name": "Get Student Fees",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/fees/student/{{student_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "fees", "student", "{{student_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Student Fee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{student_id}}\",\n  \"feeStructureId\": \"{{fee_structure_id}}\",\n  \"amount\": 5000,\n  \"dueDate\": \"2024-12-05\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/fees/student-fees",
+              "host": ["{{base_url}}"],
+              "path": ["api", "fees", "student-fees"]
+            }
+          }
+        },
+        {
+          "name": "Record Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentFeeId\": \"{{student_fee_id}}\",\n  \"amountPaid\": 5000,\n  \"paymentMethod\": \"cash\",\n  \"transactionReference\": \"TXN123456\",\n  \"paymentDate\": \"2024-11-15\",\n  \"receivedBy\": \"{{user_id}}\",\n  \"notes\": \"Full payment received\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/fees/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "fees", "payments"]
+            }
+          }
+        },
+        {
+          "name": "Get Overdue Fees",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/fees/school/{{school_id}}/overdue",
+              "host": ["{{base_url}}"],
+              "path": ["api", "fees", "school", "{{school_id}}", "overdue"]
+            }
+          }
+        },
+        {
+          "name": "Get Fee Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/fees/school/{{school_id}}/statistics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "fees", "school", "{{school_id}}", "statistics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Timetable Management",
+      "item": [
+        {
+          "name": "Get Timetable by Class",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/timetables/class/{{class_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "timetables", "class", "{{class_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Timetable by Teacher",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/timetables/teacher/{{teacher_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "timetables", "teacher", "{{teacher_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Timetable Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classId\": \"{{class_id}}\",\n  \"subjectId\": \"{{subject_id}}\",\n  \"teacherId\": \"{{teacher_id}}\",\n  \"dayOfWeek\": 1,\n  \"startTime\": \"09:00\",\n  \"endTime\": \"10:00\",\n  \"roomNumber\": \"101\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/timetables",
+              "host": ["{{base_url}}"],
+              "path": ["api", "timetables"]
+            }
+          }
+        },
+        {
+          "name": "Update Timetable Entry",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startTime\": \"09:30\",\n  \"endTime\": \"10:30\",\n  \"roomNumber\": \"102\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/timetables/{{timetable_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "timetables", "{{timetable_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Check Teacher Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/timetables/teacher/{{teacher_id}}/availability?dayOfWeek=1&startTime=09:00&endTime=10:00",
+              "host": ["{{base_url}}"],
+              "path": ["api", "timetables", "teacher", "{{teacher_id}}", "availability"],
+              "query": [
+                {
+                  "key": "dayOfWeek",
+                  "value": "1"
+                },
+                {
+                  "key": "startTime",
+                  "value": "09:00"
+                },
+                {
+                  "key": "endTime",
+                  "value": "10:00"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Weekly Schedule",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/timetables/class/{{class_id}}/weekly",
+              "host": ["{{base_url}}"],
+              "path": ["api", "timetables", "class", "{{class_id}}", "weekly"]
+            }
+          }
+        },
+        {
+          "name": "Delete Timetable Entry",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/timetables/{{timetable_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "timetables", "{{timetable_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Management",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users"]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated First Name\",\n  \"lastName\": \"Updated Last Name\",\n  \"phone\": \"+1234567999\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Deactivate User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{user_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports & Analytics",
+      "item": [
+        {
+          "name": "School Dashboard Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reports/school/{{school_id}}/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "school", "{{school_id}}", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Student Performance Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reports/student/{{student_id}}/performance?termId={{term_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "student", "{{student_id}}", "performance"],
+              "query": [
+                {
+                  "key": "termId",
+                  "value": "{{term_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Class Performance Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reports/class/{{class_id}}/performance?termId={{term_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "class", "{{class_id}}", "performance"],
+              "query": [
+                {
+                  "key": "termId",
+                  "value": "{{term_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Attendance Summary Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reports/attendance/class/{{class_id}}?startDate=2024-09-01&endDate=2024-12-15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "attendance", "class", "{{class_id}}"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-09-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-15"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Fee Collection Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reports/fees/school/{{school_id}}?startDate=2024-09-01&endDate=2024-12-15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "fees", "school", "{{school_id}}"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-09-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-15"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

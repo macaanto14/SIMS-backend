@@ -37,21 +37,17 @@ exports.AuthMiddleware = void 0;
 const jwt = __importStar(require("jsonwebtoken"));
 class AuthMiddleware {
     constructor(userService, auditService, rbacService) {
+        this.userService = userService;
+        this.auditService = auditService;
+        this.rbacService = rbacService;
         this.authenticate = async (req, res, next) => {
             try {
-                const authHeader = req.headers.authorization;
-                if (!authHeader || !authHeader.startsWith('Bearer ')) {
-                    res.status(401).json({
-                        success: false,
-                        message: 'No token provided'
-                    });
-                    return;
-                }
-                const token = authHeader.substring(7);
+                const authHeader = req.headers['authorization'];
+                const token = authHeader?.split(' ')[1];
                 if (!token) {
                     res.status(401).json({
                         success: false,
-                        message: 'Invalid token format'
+                        message: 'Access token required'
                     });
                     return;
                 }
@@ -63,7 +59,7 @@ class AuthMiddleware {
                     });
                     return;
                 }
-                const user = await this.userService.getUserById(decoded.userId);
+                const user = await this.userService.findById(decoded.userId);
                 if (!user || !user.isActive) {
                     res.status(401).json({
                         success: false,
@@ -121,17 +117,18 @@ class AuthMiddleware {
             const roles = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
             return async (req, res, next) => {
                 try {
-                    if (!req.user || !req.user.id) {
+                    const user = req.user;
+                    if (!user || !user.id) {
                         res.status(401).json({
                             success: false,
                             message: 'Authentication required'
                         });
                         return;
                     }
-                    const hasRole = await this.rbacService.hasRole(req.user.id, roles);
+                    const hasRole = await this.rbacService.hasRole(user.id, roles);
                     if (!hasRole) {
-                        const userRoles = await this.rbacService.getUserRoles(req.user.id);
-                        await this.auditService.logSystemEvent('ACCESS_DENIED', req.user.id, {
+                        const userRoles = await this.rbacService.getUserRoles(user.id);
+                        await this.auditService.logSystemEvent('ACCESS_DENIED', user.id, {
                             requiredRoles: roles,
                             userRoles,
                             endpoint: req.path,
@@ -147,7 +144,7 @@ class AuthMiddleware {
                         });
                         return;
                     }
-                    req.userPermissions = await this.rbacService.getUserPermissions(req.user.id);
+                    req.userPermissions = await this.rbacService.getUserPermissions(user.id);
                     next();
                 }
                 catch (error) {
@@ -162,7 +159,8 @@ class AuthMiddleware {
         this.requirePermission = (module, action) => {
             return async (req, res, next) => {
                 try {
-                    if (!req.user || !req.user.id) {
+                    const user = req.user;
+                    if (!user || !user.id) {
                         res.status(401).json({
                             success: false,
                             message: 'Authentication required'
@@ -170,10 +168,10 @@ class AuthMiddleware {
                         return;
                     }
                     const schoolId = req.params.schoolId || req.body.schoolId || req.query.schoolId;
-                    const hasPermission = await this.rbacService.hasPermission(req.user.id, module, action, schoolId);
+                    const hasPermission = await this.rbacService.hasPermission(user.id, module, action, schoolId);
                     if (!hasPermission) {
-                        const userRoles = await this.rbacService.getUserRoles(req.user.id);
-                        await this.auditService.logSystemEvent('ACCESS_DENIED', req.user.id, {
+                        const userRoles = await this.rbacService.getUserRoles(user.id);
+                        await this.auditService.logSystemEvent('ACCESS_DENIED', user.id, {
                             requiredPermission: { module, action },
                             userRoles,
                             schoolId,
@@ -190,7 +188,7 @@ class AuthMiddleware {
                         });
                         return;
                     }
-                    req.userPermissions = await this.rbacService.getUserPermissions(req.user.id);
+                    req.userPermissions = await this.rbacService.getUserPermissions(user.id);
                     next();
                 }
                 catch (error) {
@@ -204,7 +202,8 @@ class AuthMiddleware {
         };
         this.requireSchoolAccess = async (req, res, next) => {
             try {
-                if (!req.user || !req.user.id) {
+                const user = req.user;
+                if (!user || !user.id) {
                     res.status(401).json({
                         success: false,
                         message: 'Authentication required'
@@ -219,13 +218,13 @@ class AuthMiddleware {
                     });
                     return;
                 }
-                const isSuperAdmin = await this.rbacService.hasRole(req.user.id, ['Super Admin']);
+                const isSuperAdmin = await this.rbacService.hasRole(user.id, ['Super Admin']);
                 if (!isSuperAdmin) {
-                    const schoolContexts = await this.rbacService.getUserSchoolContext(req.user.id);
-                    if (!schoolContexts.includes(schoolId)) {
-                        await this.auditService.logSystemEvent('SCHOOL_ACCESS_DENIED', req.user.id, {
+                    const schoolContexts = await this.rbacService.getUserSchoolContext(user.id);
+                    if (!schoolContexts.some(sc => sc.schoolId === schoolId)) {
+                        await this.auditService.logSystemEvent('SCHOOL_ACCESS_DENIED', user.id, {
                             schoolId,
-                            userSchoolContexts: schoolContexts.map(sc => sc.schoolId),
+                            userSchoolContexts: schoolContexts.map(sc => sc.schoolId).filter((id) => id !== null),
                             endpoint: req.path,
                             method: req.method,
                             ipAddress: req.ip,
@@ -251,9 +250,6 @@ class AuthMiddleware {
                 });
             }
         };
-        this.userService = userService;
-        this.auditService = auditService;
-        this.rbacService = rbacService;
     }
 }
 exports.AuthMiddleware = AuthMiddleware;

@@ -1,4 +1,3 @@
-import { BaseEntity } from './base/BaseEntity';
 import { User } from './User';
 import { School } from './School';
 export declare enum OperationType {
@@ -9,7 +8,8 @@ export declare enum OperationType {
     LOGOUT = "LOGOUT",
     ACCESS = "ACCESS"
 }
-export declare class AuditLog extends BaseEntity {
+export declare class AuditLog {
+    id: string;
     operationType: OperationType;
     tableName: string;
     recordId: string | null;
@@ -30,9 +30,11 @@ export declare class AuditLog extends BaseEntity {
     sessionId: string | null;
     schoolName: string | null;
     fieldsChanged: number;
+    createdAt: Date;
     userId: string | null;
     schoolId: string | null;
     user: User | null;
     school: School | null;
+    generateId(): void;
 }
 //# sourceMappingURL=AuditLog.d.ts.map

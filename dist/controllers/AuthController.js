@@ -104,17 +104,18 @@ class AuthController {
                 const roles = await this.rbacService.getUserRoles(userId);
                 const permissions = await this.rbacService.getUserPermissions(userId);
                 const schoolContexts = await this.rbacService.getUserSchoolContext(userId);
+                const user = req.user;
                 (0, response_1.successResponse)(res, {
                     user: {
-                        id: req.user.id,
-                        email: req.user.email,
-                        firstName: req.user.firstName,
-                        lastName: req.user.lastName,
-                        fullName: req.user.fullName,
-                        phone: req.user.phone,
-                        avatar: req.user.avatar,
-                        schoolId: req.user.schoolId,
-                        lastLoginAt: req.user.lastLoginAt
+                        id: user.id,
+                        email: user.email,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        fullName: user.fullName,
+                        phone: user.phone,
+                        avatar: user.avatar,
+                        schoolId: user.schoolId,
+                        lastLoginAt: user.lastLoginAt
                     },
                     roles,
                     permissions: permissions.map(p => p.module + '.' + p.action),

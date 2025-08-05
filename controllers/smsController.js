@@ -48,7 +48,7 @@ const sendVerification = async (req, res) => {
          status = 'pending',
          attempts = 0,
          expires_at = NOW() + INTERVAL '10 minutes',
-         updated_at = NOW()`,
+         updatedAt = NOW()`,
       [phoneHash, purpose, twilioResponse.sid]
     );
     
@@ -157,7 +157,7 @@ const verifyCode = async (req, res) => {
       // Update verification status
       await client.query(
         `UPDATE sms_verifications 
-         SET status = 'verified', verified_at = NOW(), updated_at = NOW()
+         SET status = 'verified', verified_at = NOW(), updatedAt = NOW()
          WHERE id = $1`,
         [verification.id]
       );
@@ -189,7 +189,7 @@ const verifyCode = async (req, res) => {
       // Increment attempts
       await client.query(
         `UPDATE sms_verifications 
-         SET attempts = attempts + 1, updated_at = NOW()
+         SET attempts = attempts + 1, updatedAt = NOW()
          WHERE id = $1`,
         [verification.id]
       );
@@ -230,10 +230,10 @@ const getVerificationStatus = async (req, res) => {
     const phoneHash = phoneValidationService.hashPhoneNumber(phoneNumber);
     
     const result = await pool.query(
-      `SELECT status, attempts, max_attempts, expires_at, verified_at, created_at
+      `SELECT status, attempts, max_attempts, expires_at, verified_at, createdAt
        FROM sms_verifications 
        WHERE phone_number_hash = $1 AND purpose = $2
-       ORDER BY created_at DESC LIMIT 1`,
+       ORDER BY createdAt DESC LIMIT 1`,
       [phoneHash, purpose]
     );
     
@@ -250,7 +250,7 @@ const getVerificationStatus = async (req, res) => {
       maxAttempts: verification.max_attempts,
       expiresAt: verification.expires_at,
       verifiedAt: verification.verified_at,
-      createdAt: verification.created_at
+      createdAt: verification.createdAt
     }, 'Verification status retrieved successfully');
     
   } catch (error) {

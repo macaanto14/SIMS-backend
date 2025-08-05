@@ -173,7 +173,7 @@ class DatabaseAuditHelper {
 
       const query = `
         UPDATE ${tableName} 
-        SET ${setClause}, updated_at = NOW()
+        SET ${setClause}, updatedAt = NOW()
         WHERE id = $1
         RETURNING *
       `;

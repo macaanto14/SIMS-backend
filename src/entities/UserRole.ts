@@ -16,39 +16,43 @@ import { School } from './School';
 @Index(['userId'])
 @Index(['roleId'])
 @Index(['schoolId'])
+@Index(['isActive'])
 export class UserRole extends BaseEntity {
-  @Column({ name: 'user_id', type: 'uuid' })
+  @Column({ type: 'uuid' })
   userId!: string;
 
-  @Column({ name: 'role_id', type: 'uuid' })
+  @Column({ type: 'uuid' })
   roleId!: string;
 
-  @Column({ name: 'school_id', type: 'uuid', nullable: true })
-  schoolId!: string;
+  @Column({ type: 'uuid', nullable: true })
+  schoolId!: string | null;
 
-  @Column({ name: 'assigned_by', type: 'uuid', nullable: true })
-  assignedBy!: string;
+  @Column({ type: 'uuid', nullable: true })
+  assignedBy!: string | null;
 
-  @Column({ name: 'assigned_at', type: 'timestamptz', nullable: true })
-  assignedAt!: Date;
+  @Column({ type: 'timestamptz', nullable: true })
+  assignedAt!: Date | null;
 
-  @Column({ name: 'expires_at', type: 'timestamptz', nullable: true })
-  expiresAt!: Date;
+  @Column({ type: 'timestamptz', nullable: true })
+  expiresAt!: Date | null;
+
+  @Column({ type: 'boolean', default: true })
+  isActive!: boolean;
 
   // Relationships
   @ManyToOne(() => User, user => user.userRoles, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'userId' })
   user!: User;
 
   @ManyToOne(() => Role, role => role.userRoles, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'role_id' })
+  @JoinColumn({ name: 'roleId' })
   role!: Role;
 
   @ManyToOne(() => School, { nullable: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'school_id' })
-  school!: School;
+  @JoinColumn({ name: 'schoolId' })
+  school!: School | null;
 
   @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'assigned_by' })
-  assignedByUser!: User;
+  @JoinColumn({ name: 'assignedBy' })
+  assignedByUser!: User | null;
 }

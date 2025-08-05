@@ -5,14 +5,14 @@ import { School } from './School';
 export declare class UserRole extends BaseEntity {
     userId: string;
     roleId: string;
-    schoolId: string;
-    assignedBy: string;
-    assignedAt: Date;
-    expiresAt: Date;
-    metadata: Record<string, any>;
+    schoolId: string | null;
+    assignedBy: string | null;
+    assignedAt: Date | null;
+    expiresAt: Date | null;
+    isActive: boolean;
     user: User;
     role: Role;
-    school: School;
-    assignedByUser: User;
+    school: School | null;
+    assignedByUser: User | null;
 }
 //# sourceMappingURL=UserRole.d.ts.map

@@ -241,7 +241,7 @@ class EnhancedAuthController {
           lastName: user.last_name,
           phone: user.phone,
           avatarUrl: user.avatar_url,
-          createdAt: user.created_at,
+          createdAt: user.createdAt,
           lastLoginAt: user.last_login_at,
           roles: user.roles || [],
           recentActivity

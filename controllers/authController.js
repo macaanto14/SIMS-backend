@@ -77,7 +77,7 @@ const register = async (req, res) => {
     // Create user
     const userResult = await client.query(
       `INSERT INTO users (email, password_hash, first_name, last_name, phone) 
-       VALUES ($1, $2, $3, $4, $5) RETURNING id, email, first_name, last_name, created_at`,
+       VALUES ($1, $2, $3, $4, $5) RETURNING id, email, first_name, last_name, createdAt`,
       [email, hashedPassword, first_name, last_name, phone]
     );
     
@@ -117,7 +117,7 @@ const register = async (req, res) => {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
-        createdAt: user.created_at,
+        createdAt: user.createdAt,
         role: role || null,
         schoolId: school_id || null
       },
@@ -293,7 +293,7 @@ const getProfile = async (req, res) => {
     const userId = req.user.id;
     
     const userResult = await pool.query(
-      `SELECT u.id, u.email, u.first_name, u.last_name, u.phone, u.avatar_url, u.created_at,
+      `SELECT u.id, u.email, u.first_name, u.last_name, u.phone, u.avatar_url, u.createdAt,
               ur.role_id, r.name as role_name, ur.school_id, s.name as school_name,
               COUNT(DISTINCT p.id) as permission_count
        FROM users u
@@ -303,7 +303,7 @@ const getProfile = async (req, res) => {
        LEFT JOIN role_permissions rp ON r.id = rp.role_id
        LEFT JOIN permissions p ON rp.permission_id = p.id
        WHERE u.id = $1
-       GROUP BY u.id, u.email, u.first_name, u.last_name, u.phone, u.avatar_url, u.created_at,
+       GROUP BY u.id, u.email, u.first_name, u.last_name, u.phone, u.avatar_url, u.createdAt,
                 ur.role_id, r.name, ur.school_id, s.name`,
       [userId]
     );
@@ -330,7 +330,7 @@ const getProfile = async (req, res) => {
       lastName: user.last_name,
       phone: user.phone,
       avatarUrl: user.avatar_url,
-      createdAt: user.created_at,
+      createdAt: user.createdAt,
       roles
     });
     
@@ -529,7 +529,7 @@ const resetPasswordSMS = async (req, res) => {
     
     // Update password
     await pool.query(
-      `UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2`,
+      `UPDATE users SET password_hash = $1, updatedAt = NOW() WHERE id = $2`,
       [hashedPassword, user.id]
     );
     

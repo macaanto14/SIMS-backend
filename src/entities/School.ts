@@ -13,43 +13,58 @@ import { AcademicYear } from './AcademicYear';
 import { TeacherProfile } from './TeacherProfile';
 import { StudentProfile } from './StudentProfile';
 import { ParentProfile } from './ParentProfile';
+import { Subject } from './Subject';
+import { FeeStructure } from './FeeStructure';
 
 @Entity('schools')
 @Index(['isActive'])
+@Index(['code'], { unique: true })
 export class School extends BaseEntity {
-  @Column({ type: 'text' })
+  @Column({ type: 'varchar', length: 255 })
   name!: string;
 
-  @Column({ type: 'text', unique: true })
+  @Column({ type: 'varchar', length: 50 })
   code!: string;
 
   @Column({ type: 'text', nullable: true })
   address!: string | null;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   phone!: string | null;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   email!: string | null;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   website!: string | null;
 
-  @Column({ name: 'logo_url', type: 'text', nullable: true })
+  @Column({ type: 'text', nullable: true })
   logoUrl!: string | null;
 
-  @Column({ name: 'principal_id', type: 'uuid', nullable: true })
+  @Column({ type: 'text', nullable: true })
+  description!: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  establishedYear!: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  principalName!: string | null;
+
+  @Column({ type: 'uuid', nullable: true })
   principalId!: string | null;
 
-  @Column({ name: 'is_active', type: 'boolean', default: true })
-  isActive!: boolean;
+  @Column({ type: 'jsonb', default: '{}' })
+  settings!: any;
 
   @Column({ type: 'jsonb', default: '{}' })
-  settings!: Record<string, any>;
+  metadata!: any;
+
+  @Column({ type: 'boolean', default: true })
+  isActive!: boolean;
 
   // Relationships
   @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'principal_id' })
+  @JoinColumn({ name: 'principalId' })
   principal!: User | null;
 
   @OneToMany(() => User, user => user.school)
@@ -61,14 +76,23 @@ export class School extends BaseEntity {
   @OneToMany(() => AcademicYear, academicYear => academicYear.school)
   academicYears!: AcademicYear[];
 
-  @OneToMany(() => TeacherProfile, profile => profile.school)
-  teacherProfiles!: TeacherProfile[];
+  @OneToMany(() => TeacherProfile, teacher => teacher.school)
+  teachers!: TeacherProfile[];
 
-  @OneToMany(() => StudentProfile, profile => profile.school)
-  studentProfiles!: StudentProfile[];
+  @OneToMany(() => StudentProfile, student => student.school)
+  students!: StudentProfile[];
 
-  @OneToMany(() => ParentProfile, profile => profile.school)
+  @OneToMany(() => ParentProfile, parent => parent.school)
+  parents!: ParentProfile[];
+
+  @OneToMany(() => ParentProfile, parent => parent.school)
   parentProfiles!: ParentProfile[];
+
+  @OneToMany(() => Subject, subject => subject.school)
+  subjects!: Subject[];
+
+  @OneToMany(() => FeeStructure, feeStructure => feeStructure.school)
+  feeStructures!: FeeStructure[];
 
   // Virtual fields
   get displayName(): string {

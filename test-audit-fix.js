@@ -16,7 +16,7 @@ async function testAuditFix() {
         const testQuery = `
             INSERT INTO data_access_logs (
                 user_id, table_name, record_id, access_type, query_type,
-                result_count, purpose, ip_address, user_agent, created_at
+                result_count, purpose, ip_address, user_agent, createdAt
             ) VALUES (
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
             ) RETURNING id
@@ -32,7 +32,7 @@ async function testAuditFix() {
             'Testing audit fix',                     // purpose
             '127.0.0.1',                            // ip_address
             'Test User Agent',                       // user_agent
-            new Date()                               // created_at (was accessed_at)
+            new Date()                               // createdAt (was accessed_at)
         ];
         
         const result = await client.query(testQuery, testValues);
@@ -54,7 +54,7 @@ async function testAuditFix() {
             console.log(`      - Table: ${verifyResult.rows[0].table_name}`);
             console.log(`      - Access Type: ${verifyResult.rows[0].access_type}`);
             console.log(`      - User ID: ${verifyResult.rows[0].user_id}`);
-            console.log(`      - Created: ${verifyResult.rows[0].created_at}`);
+            console.log(`      - Created: ${verifyResult.rows[0].createdAt}`);
         }
         
         // Clean up test data

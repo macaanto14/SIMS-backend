@@ -84,9 +84,9 @@ class AuthService {
                 throw new AppError_1.AppError('Invalid credentials', 401);
             }
             const roles = user.userRoles
-                .filter(ur => ur.isActive && ur.role.isActive)
-                .filter(ur => !ur.expiresAt || ur.expiresAt > new Date())
-                .map(ur => ur.role.name);
+                .filter((ur) => ur.isActive)
+                .filter((ur) => !ur.expiresAt || ur.expiresAt > new Date())
+                .map((ur) => ur.role.name);
             const permissions = await this.rbacService.getUserPermissions(user.id);
             const token = this.generateToken({
                 userId: user.id,
@@ -147,7 +147,7 @@ class AuthService {
             let roleEntity = null;
             if (role) {
                 roleEntity = await this.roleRepository.findOne({
-                    where: { name: role, isActive: true }
+                    where: { name: role }
                 });
                 if (!roleEntity) {
                     await this.auditService.logAuthEvent('REGISTER', null, {

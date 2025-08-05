@@ -28,49 +28,50 @@ __decorate([
 ], UserRole.prototype, "roleId", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'uuid', nullable: true }),
-    __metadata("design:type", String)
+    __metadata("design:type", Object)
 ], UserRole.prototype, "schoolId", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'uuid', nullable: true }),
-    __metadata("design:type", String)
+    __metadata("design:type", Object)
 ], UserRole.prototype, "assignedBy", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'timestamptz', nullable: true }),
-    __metadata("design:type", Date)
+    __metadata("design:type", Object)
 ], UserRole.prototype, "assignedAt", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'timestamptz', nullable: true }),
-    __metadata("design:type", Date)
+    __metadata("design:type", Object)
 ], UserRole.prototype, "expiresAt", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'jsonb', default: {} }),
-    __metadata("design:type", Object)
-], UserRole.prototype, "metadata", void 0);
+    (0, typeorm_1.Column)({ type: 'boolean', default: true }),
+    __metadata("design:type", Boolean)
+], UserRole.prototype, "isActive", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => User_1.User, user => user.userRoles, { onDelete: 'CASCADE' }),
-    (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
+    (0, typeorm_1.JoinColumn)({ name: 'userId' }),
     __metadata("design:type", User_1.User)
 ], UserRole.prototype, "user", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => Role_1.Role, role => role.userRoles, { onDelete: 'CASCADE' }),
-    (0, typeorm_1.JoinColumn)({ name: 'role_id' }),
+    (0, typeorm_1.JoinColumn)({ name: 'roleId' }),
     __metadata("design:type", Role_1.Role)
 ], UserRole.prototype, "role", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => School_1.School, { nullable: true, onDelete: 'CASCADE' }),
-    (0, typeorm_1.JoinColumn)({ name: 'school_id' }),
-    __metadata("design:type", School_1.School)
+    (0, typeorm_1.JoinColumn)({ name: 'schoolId' }),
+    __metadata("design:type", Object)
 ], UserRole.prototype, "school", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => User_1.User, { nullable: true }),
-    (0, typeorm_1.JoinColumn)({ name: 'assigned_by' }),
-    __metadata("design:type", User_1.User)
+    (0, typeorm_1.JoinColumn)({ name: 'assignedBy' }),
+    __metadata("design:type", Object)
 ], UserRole.prototype, "assignedByUser", void 0);
 exports.UserRole = UserRole = __decorate([
     (0, typeorm_1.Entity)('user_roles'),
     (0, typeorm_1.Unique)(['userId', 'roleId', 'schoolId']),
     (0, typeorm_1.Index)(['userId']),
     (0, typeorm_1.Index)(['roleId']),
-    (0, typeorm_1.Index)(['schoolId'])
+    (0, typeorm_1.Index)(['schoolId']),
+    (0, typeorm_1.Index)(['isActive'])
 ], UserRole);
 //# sourceMappingURL=UserRole.js.map

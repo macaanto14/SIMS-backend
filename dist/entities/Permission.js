@@ -11,30 +11,36 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Permission = void 0;
 const typeorm_1 = require("typeorm");
-const BaseEntity_1 = require("./base/BaseEntity");
 const RolePermission_1 = require("./RolePermission");
-let Permission = class Permission extends BaseEntity_1.BaseEntity {
+let Permission = class Permission {
     get displayName() {
         return `${this.module}.${this.action}`;
     }
 };
 exports.Permission = Permission;
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 100 }),
+    (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
+    __metadata("design:type", String)
+], Permission.prototype, "id", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text' }),
     __metadata("design:type", String)
 ], Permission.prototype, "module", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 100 }),
+    (0, typeorm_1.Column)({ type: 'text' }),
     __metadata("design:type", String)
 ], Permission.prototype, "action", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 255, nullable: true }),
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
     __metadata("design:type", Object)
 ], Permission.prototype, "description", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'jsonb', default: {} }),
-    __metadata("design:type", Object)
-], Permission.prototype, "metadata", void 0);
+    (0, typeorm_1.CreateDateColumn)({
+        type: 'timestamptz',
+        default: () => 'CURRENT_TIMESTAMP',
+    }),
+    __metadata("design:type", Date)
+], Permission.prototype, "createdAt", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => RolePermission_1.RolePermission, rolePermission => rolePermission.permission),
     __metadata("design:type", Array)
@@ -42,7 +48,6 @@ __decorate([
 exports.Permission = Permission = __decorate([
     (0, typeorm_1.Entity)('permissions'),
     (0, typeorm_1.Unique)(['module', 'action']),
-    (0, typeorm_1.Index)(['module']),
-    (0, typeorm_1.Index)(['isActive'])
+    (0, typeorm_1.Index)(['module'])
 ], Permission);
 //# sourceMappingURL=Permission.js.map

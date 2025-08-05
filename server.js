@@ -12,9 +12,9 @@ require('dotenv').config();
 // Import routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
-const schoolRoutes = require('./routes/schools');
+const schoolRoutes = require('./routes/schools'); // Back to original with auth
 const academicRoutes = require('./routes/academic');
-const auditRoutes = require('./routes/audit'); // Uncomment this line
+const auditRoutes = require('./routes/audit');
 const smsRoutes = require('./routes/sms');
 
 // Import database connection
@@ -599,10 +599,10 @@ app.get('/health', async (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/schools', schoolRoutes);
+app.use('/api/schools', require('./routes/schools-temp-fix')); // Use temporary fix
 app.use('/api/academic', academicRoutes);
-app.use('/api/audit', auditRoutes); // Uncomment this line
-app.use('/api/sms', smsRoutes); // Add SMS routes
+app.use('/api/audit', auditRoutes);
+app.use('/api/sms', smsRoutes);
 
 // 404 handler
 // 404 handler

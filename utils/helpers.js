@@ -26,7 +26,7 @@ const buildUpdateQuery = (tableName, data, whereClause) => {
   const values = keys.map(key => data[key]);
   
   return {
-    query: `UPDATE ${tableName} SET ${setClause}, updated_at = NOW() WHERE ${whereClause}`,
+    query: `UPDATE ${tableName} SET ${setClause}, updatedAt = NOW() WHERE ${whereClause}`,
     values
   };
 };

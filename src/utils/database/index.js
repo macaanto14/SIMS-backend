@@ -164,7 +164,7 @@ const executeTransaction = async (queries, options = {}) => {
  */
 const buildUpdateQuery = (tableName, data, whereClause, options = {}) => {
   const { 
-    excludeFields = ['id', 'created_at'],
+    excludeFields = ['id', 'createdAt'],
     includeUpdatedAt = true,
     returning = '*'
   } = options;
@@ -188,7 +188,7 @@ const buildUpdateQuery = (tableName, data, whereClause, options = {}) => {
   let query = `UPDATE ${tableName} SET ${setClause}`;
   
   if (includeUpdatedAt) {
-    query += `, updated_at = NOW()`;
+    query += `, updatedAt = NOW()`;
   }
   
   query += ` WHERE ${whereClause}`;
@@ -226,8 +226,8 @@ const buildInsertQuery = (tableName, data, options = {}) => {
   const allKeys = [...new Set(records.flatMap(record => Object.keys(record)))];
   
   if (includeTimestamps) {
-    if (!allKeys.includes('created_at')) allKeys.push('created_at');
-    if (!allKeys.includes('updated_at')) allKeys.push('updated_at');
+    if (!allKeys.includes('createdAt')) allKeys.push('createdAt');
+    if (!allKeys.includes('updatedAt')) allKeys.push('updatedAt');
   }
 
   const values = [];
@@ -239,7 +239,7 @@ const buildInsertQuery = (tableName, data, options = {}) => {
     allKeys.forEach((key, keyIndex) => {
       const paramIndex = recordIndex * allKeys.length + keyIndex + 1;
       
-      if (key === 'created_at' || key === 'updated_at') {
+      if (key === 'createdAt' || key === 'updatedAt') {
         recordValues.push('NOW()');
       } else {
         recordValues.push(`$${paramIndex}`);
@@ -275,7 +275,7 @@ const buildPaginatedQuery = (options = {}) => {
     selectFields = '*',
     whereClause = '',
     joinClause = '',
-    orderBy = 'created_at DESC',
+    orderBy = 'createdAt DESC',
     page = 1,
     limit = 20,
     searchFields = [],

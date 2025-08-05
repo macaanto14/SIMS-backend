@@ -7,6 +7,7 @@ import {
   Unique,
   PrimaryGeneratedColumn,
   CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Role } from './Role';
 import { Permission } from './Permission';
@@ -31,12 +32,18 @@ export class RolePermission {
   })
   createdAt!: Date;
 
+  @UpdateDateColumn({
+    type: 'timestamptz',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  updatedAt!: Date;
+
   // Relationships
   @ManyToOne(() => Role, role => role.rolePermissions, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'role_id' })
+  @JoinColumn({ name: 'roleId' })
   role!: Role;
 
   @ManyToOne(() => Permission, permission => permission.rolePermissions, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'permission_id' })
+  @JoinColumn({ name: 'permissionId' })
   permission!: Permission;
 }

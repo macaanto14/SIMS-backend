@@ -13,32 +13,32 @@ import { School } from './School';
 @Index(['userId'])
 @Index(['schoolId'])
 export class ParentProfile extends BaseEntity {
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', name: 'user_id' })
   userId!: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', name: 'school_id' })
   schoolId!: string;
-
-  @Column({ type: 'varchar', length: 50 })
-  relationship!: string; // father, mother, guardian
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   occupation!: string | null;
 
-  @Column({ type: 'varchar', length: 20, nullable: true })
-  phone!: string | null;
-
   @Column({ type: 'varchar', length: 255, nullable: true })
-  email!: string | null;
+  workplace!: string | null;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true, name: 'annual_income' })
+  annualIncome!: number | null;
 
   @Column({ type: 'text', nullable: true })
   address!: string | null;
 
-  @Column({ type: 'varchar', length: 20, nullable: true })
+  @Column({ type: 'varchar', length: 20, nullable: true, name: 'emergency_contact' })
   emergencyContact!: string | null;
 
-  @Column({ type: 'jsonb', nullable: true })
-  metadata!: Record<string, any> | null;
+  @Column({ type: 'varchar', length: 50, nullable: true, name: 'relationship_to_student' })
+  relationshipToStudent!: string | null;
+
+  @Column({ type: 'boolean', default: true })
+  isActive!: boolean;
 
   // Relationships
   @ManyToOne(() => User, user => user.parentProfile)
@@ -51,6 +51,6 @@ export class ParentProfile extends BaseEntity {
 
   // Virtual fields
   get displayName(): string {
-    return `${this.relationship} - ${this.user?.fullName || 'Unknown'}`;
+    return this.user?.fullName || 'Unknown Parent';
   }
 }

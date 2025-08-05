@@ -100,7 +100,7 @@ async function fixSMSVerificationsTable() {
         WHERE id NOT IN (
           SELECT DISTINCT ON (phone_number_hash, purpose) id
           FROM sms_verifications
-          ORDER BY phone_number_hash, purpose, created_at DESC
+          ORDER BY phone_number_hash, purpose, createdAt DESC
         );
       `);
       
@@ -161,7 +161,7 @@ async function fixSMSVerificationsTable() {
         status = 'pending',
         attempts = 0,
         expires_at = NOW() + INTERVAL '10 minutes',
-        updated_at = NOW()
+        updatedAt = NOW()
       RETURNING id, twilio_sid;
     `, [testUuid2, testPhoneHash, testPurpose]);
     

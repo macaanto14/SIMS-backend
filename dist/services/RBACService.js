@@ -37,17 +37,13 @@ class RBACService {
         });
         const permissions = [];
         for (const userRole of userRoles) {
-            if (!userRole.role.isActive)
-                continue;
             if (userRole.expiresAt && userRole.expiresAt < new Date())
                 continue;
             for (const rolePermission of userRole.role.rolePermissions || []) {
-                if (!rolePermission.permission.isActive)
-                    continue;
                 permissions.push({
                     module: rolePermission.permission.module,
                     action: rolePermission.permission.action,
-                    schoolId: userRole.schoolId,
+                    schoolId: userRole.schoolId || null,
                     roleName: userRole.role.name
                 });
             }
@@ -85,10 +81,9 @@ class RBACService {
             relations: ['role', 'school']
         });
         return userRoles
-            .filter(ur => ur.role.isActive)
             .filter(ur => !ur.expiresAt || ur.expiresAt > new Date())
             .map(ur => ({
-            schoolId: ur.schoolId,
+            schoolId: ur.schoolId || null,
             schoolName: ur.school?.name || 'System',
             roleName: ur.role.name
         }));
@@ -129,11 +124,10 @@ class RBACService {
             this.clearUserPermissionCache(userId);
         }
     }
-    async createRole(name, description, level) {
+    async createRole(name, description) {
         const role = this.roleRepository.create({
             name,
-            description,
-            level
+            description: description || ''
         });
         return this.roleRepository.save(role);
     }

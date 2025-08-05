@@ -89,7 +89,7 @@ async function testEnhancedAuditSystem(client) {
           school_name, ip_address, user_agent, request_id,
           success, fields_changed
         FROM audit_logs 
-        ORDER BY created_at DESC 
+        ORDER BY createdAt DESC 
         LIMIT 1
       `);
       

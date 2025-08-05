@@ -8,7 +8,7 @@ class InitialMigration1700000000000 {
     async up(queryRunner) {
         await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
         await queryRunner.query(`
-      CREATE TABLE "roles" (
+      CREATE TABLE IF NOT EXISTS "roles" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "name" character varying(100) NOT NULL,
         "description" character varying(255),
@@ -23,7 +23,7 @@ class InitialMigration1700000000000 {
       )
     `);
         await queryRunner.query(`
-      CREATE TABLE "schools" (
+      CREATE TABLE IF NOT EXISTS "schools" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "name" character varying(255) NOT NULL,
         "code" character varying(50) NOT NULL,
@@ -46,7 +46,7 @@ class InitialMigration1700000000000 {
       )
     `);
         await queryRunner.query(`
-      CREATE TABLE "users" (
+      CREATE TABLE IF NOT EXISTS "users" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "email" character varying(255) NOT NULL,
         "password" character varying(255) NOT NULL,
@@ -71,22 +71,32 @@ class InitialMigration1700000000000 {
       )
     `);
         await queryRunner.query(`
-      ALTER TABLE "schools" 
-      ADD CONSTRAINT "FK_schools_principal" 
-      FOREIGN KEY ("principalId") REFERENCES "users"("id") ON DELETE SET NULL
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_schools_principal') THEN
+          ALTER TABLE "schools" 
+          ADD CONSTRAINT "FK_schools_principal" 
+          FOREIGN KEY ("principalId") REFERENCES "users"("id") ON DELETE SET NULL;
+        END IF;
+      END $$;
     `);
         await queryRunner.query(`
-      ALTER TABLE "users" 
-      ADD CONSTRAINT "FK_users_school" 
-      FOREIGN KEY ("schoolId") REFERENCES "schools"("id") ON DELETE SET NULL
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_users_school') THEN
+          ALTER TABLE "users" 
+          ADD CONSTRAINT "FK_users_school" 
+          FOREIGN KEY ("schoolId") REFERENCES "schools"("id") ON DELETE SET NULL;
+        END IF;
+      END $$;
     `);
-        await queryRunner.query(`CREATE INDEX "IDX_users_email" ON "users" ("email")`);
-        await queryRunner.query(`CREATE INDEX "IDX_users_isActive" ON "users" ("isActive")`);
-        await queryRunner.query(`CREATE INDEX "IDX_users_schoolId" ON "users" ("schoolId")`);
-        await queryRunner.query(`CREATE INDEX "IDX_schools_code" ON "schools" ("code")`);
-        await queryRunner.query(`CREATE INDEX "IDX_schools_isActive" ON "schools" ("isActive")`);
-        await queryRunner.query(`CREATE INDEX "IDX_roles_name" ON "roles" ("name")`);
-        await queryRunner.query(`CREATE INDEX "IDX_roles_isActive" ON "roles" ("isActive")`);
+        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_users_email" ON "users" ("email")`);
+        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_users_isActive" ON "users" ("isActive")`);
+        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_users_schoolId" ON "users" ("schoolId")`);
+        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_schools_code" ON "schools" ("code")`);
+        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_schools_isActive" ON "schools" ("isActive")`);
+        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_roles_name" ON "roles" ("name")`);
+        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_roles_isActive" ON "roles" ("isActive")`);
     }
     async down(queryRunner) {
         await queryRunner.query(`DROP TABLE "users"`);

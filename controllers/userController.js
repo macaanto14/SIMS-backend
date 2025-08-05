@@ -44,7 +44,7 @@ const getUsers = async (req, res) => {
     
     // Get users with pagination
     const usersQuery = `
-      SELECT DISTINCT u.id, u.email, u.first_name, u.last_name, u.phone, u.avatar_url, u.created_at,
+      SELECT DISTINCT u.id, u.email, u.first_name, u.last_name, u.phone, u.avatar_url, u.createdAt,
              array_agg(DISTINCT jsonb_build_object(
                'roleId', ur.role_id,
                'roleName', r.name,
@@ -56,8 +56,8 @@ const getUsers = async (req, res) => {
       LEFT JOIN roles r ON ur.role_id = r.id
       LEFT JOIN schools s ON ur.school_id = s.id
       WHERE ${whereClause}
-      GROUP BY u.id, u.email, u.first_name, u.last_name, u.phone, u.avatar_url, u.created_at
-      ORDER BY u.created_at DESC
+      GROUP BY u.id, u.email, u.first_name, u.last_name, u.phone, u.avatar_url, u.createdAt
+      ORDER BY u.createdAt DESC
       LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}
     `;
     
@@ -71,7 +71,7 @@ const getUsers = async (req, res) => {
       lastName: user.last_name,
       phone: user.phone,
       avatarUrl: user.avatar_url,
-      createdAt: user.created_at,
+      createdAt: user.createdAt,
       roles: user.roles || []
     }));
     
@@ -89,7 +89,7 @@ const getUserById = async (req, res) => {
     const { id } = req.params;
     
     const userResult = await pool.query(
-      `SELECT u.id, u.email, u.first_name, u.last_name, u.phone, u.avatar_url, u.created_at,
+      `SELECT u.id, u.email, u.first_name, u.last_name, u.phone, u.avatar_url, u.createdAt,
               array_agg(DISTINCT jsonb_build_object(
                 'roleId', ur.role_id,
                 'roleName', r.name,
@@ -118,7 +118,7 @@ const getUserById = async (req, res) => {
       lastName: user.last_name,
       phone: user.phone,
       avatarUrl: user.avatar_url,
-      createdAt: user.created_at,
+      createdAt: user.createdAt,
       roles: user.roles || []
     });
     
@@ -144,9 +144,9 @@ const updateUser = async (req, res) => {
            last_name = COALESCE($2, last_name),
            phone = COALESCE($3, phone),
            avatar_url = COALESCE($4, avatar_url),
-           updated_at = NOW()
+           updatedAt = NOW()
        WHERE id = $5 AND is_active = true
-       RETURNING id, email, first_name, last_name, phone, avatar_url, updated_at`,
+       RETURNING id, email, first_name, last_name, phone, avatar_url, updatedAt`,
       [first_name, last_name, phone, avatar_url, id]
     );
     
@@ -163,7 +163,7 @@ const updateUser = async (req, res) => {
       lastName: user.last_name,
       phone: user.phone,
       avatarUrl: user.avatar_url,
-      updatedAt: user.updated_at
+      updatedAt: user.updatedAt
     }, 'User updated successfully');
     
   } catch (error) {
@@ -183,7 +183,7 @@ const deactivateUser = async (req, res) => {
     
     const updateResult = await pool.query(
       `UPDATE users 
-       SET is_active = false, updated_at = NOW()
+       SET is_active = false, updatedAt = NOW()
        WHERE id = $1 AND is_active = true
        RETURNING id`,
       [id]

@@ -37,8 +37,8 @@ const getAcademicYears = async (req, res) => {
       startDate: year.start_date,
       endDate: year.end_date,
       isCurrent: year.is_current,
-      createdAt: year.created_at,
-      updatedAt: year.updated_at
+      createdAt: year.createdAt,
+      updatedAt: year.updatedAt
     }));
     
     const response = buildPaginatedResponse(academicYears, total, page, limit);
@@ -90,7 +90,7 @@ const createAcademicYear = async (req, res) => {
       startDate: academicYear.start_date,
       endDate: academicYear.end_date,
       isCurrent: academicYear.is_current,
-      createdAt: academicYear.created_at
+      createdAt: academicYear.createdAt
     }, 'Academic year created successfully', 201);
     
   } catch (error) {
@@ -166,8 +166,8 @@ const getClasses = async (req, res) => {
         firstName: cls.teacher_first_name,
         lastName: cls.teacher_last_name
       } : null,
-      createdAt: cls.created_at,
-      updatedAt: cls.updated_at
+      createdAt: cls.createdAt,
+      updatedAt: cls.updatedAt
     }));
     
     const response = buildPaginatedResponse(classes, total, page, limit);
@@ -207,7 +207,7 @@ const createClass = async (req, res) => {
       section: newClass.section,
       maxStudents: newClass.max_students,
       roomNumber: newClass.room_number,
-      createdAt: newClass.created_at
+      createdAt: newClass.createdAt
     }, 'Class created successfully', 201);
     
   } catch (error) {
@@ -290,8 +290,8 @@ const getAttendance = async (req, res) => {
         firstName: record.marked_by_first_name,
         lastName: record.marked_by_last_name
       },
-      createdAt: record.created_at,
-      updatedAt: record.updated_at
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt
     }));
     
     const response = buildPaginatedResponse(attendance, total, page, limit);
@@ -324,7 +324,7 @@ const markAttendance = async (req, res) => {
       // Update existing attendance
       attendanceResult = await client.query(
         `UPDATE attendance 
-         SET status = $1, notes = $2, marked_by = $3, updated_at = NOW()
+         SET status = $1, notes = $2, marked_by = $3, updatedAt = NOW()
          WHERE student_id = $4 AND date = $5
          RETURNING *`,
         [status, notes, marked_by, student_id, date]
@@ -350,8 +350,8 @@ const markAttendance = async (req, res) => {
       date: attendance.date,
       status: attendance.status,
       notes: attendance.notes,
-      createdAt: attendance.created_at,
-      updatedAt: attendance.updated_at
+      createdAt: attendance.createdAt,
+      updatedAt: attendance.updatedAt
     }, 'Attendance marked successfully', existingAttendance.rows.length > 0 ? 200 : 201);
     
   } catch (error) {

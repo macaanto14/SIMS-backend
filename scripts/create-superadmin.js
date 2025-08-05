@@ -30,11 +30,11 @@ async function createSuperAdmin() {
       return;
     }
 
-    // Create the super admin user with password column (not password_hash)
+    // Create the super admin user with correct column names (camelCase)
     const result = await client.query(`
       INSERT INTO users (
-        id, email, password, first_name, last_name, 
-        is_active, created_at, updated_at
+        id, email, password, "firstName", "lastName", 
+        "isActive", "createdAt", "updatedAt"
       ) VALUES (
         gen_random_uuid(), $1, $2, $3, $4, 
         true, now(), now()
@@ -45,6 +45,51 @@ async function createSuperAdmin() {
     console.log(`📧 Email: ${email}`);
     console.log(`🔑 Password: ${password}`);
     console.log(`🆔 User ID: ${result.rows[0].id}`);
+
+    // Now create the Super Admin role if it doesn't exist
+    const existingRole = await client.query(
+      'SELECT id FROM roles WHERE name = $1',
+      ['Super Admin']
+    );
+
+    let roleId;
+    if (existingRole.rows.length === 0) {
+      const roleResult = await client.query(`
+        INSERT INTO roles (
+          id, name, description, level, priority, 
+          "isActive", "createdAt", "updatedAt"
+        ) VALUES (
+          gen_random_uuid(), $1, $2, $3, $4,
+          true, now(), now()
+        ) RETURNING id
+      `, ['Super Admin', 'System Super Administrator with full access', 'SYSTEM', 1000]);
+      
+      roleId = roleResult.rows[0].id;
+      console.log('✅ Super Admin role created');
+    } else {
+      roleId = existingRole.rows[0].id;
+      console.log('ℹ️ Super Admin role already exists');
+    }
+
+    // Assign the Super Admin role to the user
+    const existingUserRole = await client.query(
+      'SELECT id FROM user_roles WHERE "userId" = $1 AND "roleId" = $2',
+      [result.rows[0].id, roleId]
+    );
+
+    if (existingUserRole.rows.length === 0) {
+      await client.query(`
+        INSERT INTO user_roles (
+          id, "userId", "roleId", "isActive", "createdAt", "updatedAt"
+        ) VALUES (
+          gen_random_uuid(), $1, $2, true, now(), now()
+        )
+      `, [result.rows[0].id, roleId]);
+      
+      console.log('✅ Super Admin role assigned to user');
+    } else {
+      console.log('ℹ️ User already has Super Admin role');
+    }
 
   } catch (error) {
     console.error('❌ Error creating super admin:', error);

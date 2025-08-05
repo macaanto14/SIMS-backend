@@ -11,12 +11,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RolePermission = void 0;
 const typeorm_1 = require("typeorm");
-const BaseEntity_1 = require("./base/BaseEntity");
 const Role_1 = require("./Role");
 const Permission_1 = require("./Permission");
-let RolePermission = class RolePermission extends BaseEntity_1.BaseEntity {
+let RolePermission = class RolePermission {
 };
 exports.RolePermission = RolePermission;
+__decorate([
+    (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
+    __metadata("design:type", String)
+], RolePermission.prototype, "id", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'uuid' }),
     __metadata("design:type", String)
@@ -26,17 +29,27 @@ __decorate([
     __metadata("design:type", String)
 ], RolePermission.prototype, "permissionId", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'jsonb', default: {} }),
-    __metadata("design:type", Object)
-], RolePermission.prototype, "metadata", void 0);
+    (0, typeorm_1.CreateDateColumn)({
+        type: 'timestamptz',
+        default: () => 'CURRENT_TIMESTAMP',
+    }),
+    __metadata("design:type", Date)
+], RolePermission.prototype, "createdAt", void 0);
+__decorate([
+    (0, typeorm_1.UpdateDateColumn)({
+        type: 'timestamptz',
+        default: () => 'CURRENT_TIMESTAMP',
+    }),
+    __metadata("design:type", Date)
+], RolePermission.prototype, "updatedAt", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => Role_1.Role, role => role.rolePermissions, { onDelete: 'CASCADE' }),
-    (0, typeorm_1.JoinColumn)({ name: 'role_id' }),
+    (0, typeorm_1.JoinColumn)({ name: 'roleId' }),
     __metadata("design:type", Role_1.Role)
 ], RolePermission.prototype, "role", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => Permission_1.Permission, permission => permission.rolePermissions, { onDelete: 'CASCADE' }),
-    (0, typeorm_1.JoinColumn)({ name: 'permission_id' }),
+    (0, typeorm_1.JoinColumn)({ name: 'permissionId' }),
     __metadata("design:type", Permission_1.Permission)
 ], RolePermission.prototype, "permission", void 0);
 exports.RolePermission = RolePermission = __decorate([

@@ -1,15 +1,18 @@
 import { BaseEntity } from './base/BaseEntity';
 import { School } from './School';
-import { UserRole } from './UserRole';
-import { TeacherProfile } from './TeacherProfile';
 import { StudentProfile } from './StudentProfile';
+import { TeacherProfile } from './TeacherProfile';
 import { ParentProfile } from './ParentProfile';
+import { Attendance } from './Attendance';
+import { Grade } from './Grade';
+import { FeePayment } from './FeePayment';
+import { UserRole } from './UserRole';
 import { AuditLog } from './AuditLog';
 export declare class User extends BaseEntity {
-    email: string;
-    password: string;
     firstName: string;
     lastName: string;
+    email: string;
+    password: string;
     phone: string | null;
     avatar: string | null;
     emailVerified: boolean;
@@ -18,19 +21,24 @@ export declare class User extends BaseEntity {
     resetPasswordExpires: Date | null;
     lastLoginAt: Date | null;
     lastLoginIp: string | null;
-    preferences: Record<string, any> | null;
-    metadata: Record<string, any> | null;
+    preferences: any;
+    metadata: any;
     schoolId: string | null;
+    isActive: boolean;
     school: School | null;
     userRoles: UserRole[];
-    teacherProfile: TeacherProfile[];
-    studentProfile: StudentProfile[];
-    parentProfile: ParentProfile[];
     auditLogs: AuditLog[];
-    get fullName(): string;
-    get displayName(): string;
+    studentProfile: StudentProfile;
+    teacherProfile: TeacherProfile;
+    parentProfile: ParentProfile;
+    markedAttendance: Attendance[];
+    assessedGrades: Grade[];
+    receivedPayments: FeePayment[];
     hashPassword(): Promise<void>;
     validatePassword(password: string): Promise<boolean>;
-    toJSON(): Omit<this, "generateId" | "updateTimestamp" | "password" | "resetPasswordToken" | "hashPassword" | "fullName" | "displayName" | "validatePassword" | "toJSON">;
+    get fullName(): string;
+    get displayName(): string;
+    get lastLogin(): Date | null;
+    set lastLogin(value: Date | null);
 }
 //# sourceMappingURL=User.d.ts.map

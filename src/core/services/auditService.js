@@ -65,12 +65,12 @@ class AuditService {
 
       if (filters.startDate) {
         params.push(filters.startDate);
-        query += ` AND al.created_at >= $${++paramCount}`;
+        query += ` AND al.createdAt >= $${++paramCount}`;
       }
 
       if (filters.endDate) {
         params.push(filters.endDate);
-        query += ` AND al.created_at <= $${++paramCount}`;
+        query += ` AND al.createdAt <= $${++paramCount}`;
       }
 
       if (filters.success !== undefined) {
@@ -79,7 +79,7 @@ class AuditService {
       }
 
       // Add ordering and pagination
-      query += ` ORDER BY al.created_at DESC`;
+      query += ` ORDER BY al.createdAt DESC`;
       
       params.push(limit, offset);
       query += ` LIMIT $${++paramCount} OFFSET $${++paramCount}`;
@@ -158,11 +158,11 @@ class AuditService {
           COUNT(CASE WHEN operation_type = 'LOGIN' THEN 1 END) as logins,
           COUNT(CASE WHEN success = false THEN 1 END) as failed_operations,
           COUNT(DISTINCT table_name) as tables_accessed,
-          MAX(created_at) as last_activity,
-          MIN(created_at) as first_activity
+          MAX(createdAt) as last_activity,
+          MIN(createdAt) as first_activity
         FROM audit_logs
         WHERE user_id = $1
-        AND created_at >= now() - interval '${days} days'
+        AND createdAt >= now() - interval '${days} days'
       `;
 
       const result = await pool.query(query, [userId]);
@@ -194,7 +194,7 @@ class AuditService {
             COUNT(CASE WHEN operation_type = 'LOGIN' THEN 1 END) as logins,
             AVG(duration_ms) as avg_response_time
           FROM audit_logs
-          WHERE created_at >= now() - interval '${days} days'
+          WHERE createdAt >= now() - interval '${days} days'
         `,
         
         byModule: `
@@ -204,7 +204,7 @@ class AuditService {
             COUNT(DISTINCT user_id) as unique_users,
             COUNT(CASE WHEN success = false THEN 1 END) as failed_operations
           FROM audit_logs
-          WHERE created_at >= now() - interval '${days} days'
+          WHERE createdAt >= now() - interval '${days} days'
           GROUP BY module
           ORDER BY operation_count DESC
         `,
@@ -215,19 +215,19 @@ class AuditService {
             COUNT(*) as operation_count,
             AVG(duration_ms) as avg_duration
           FROM audit_logs
-          WHERE created_at >= now() - interval '${days} days'
+          WHERE createdAt >= now() - interval '${days} days'
           GROUP BY operation_type
           ORDER BY operation_count DESC
         `,
         
         timeline: `
           SELECT 
-            DATE_TRUNC('hour', created_at) as hour,
+            DATE_TRUNC('hour', createdAt) as hour,
             COUNT(*) as operation_count,
             COUNT(CASE WHEN success = false THEN 1 END) as failed_count
           FROM audit_logs
-          WHERE created_at >= now() - interval '${days} days'
-          GROUP BY DATE_TRUNC('hour', created_at)
+          WHERE createdAt >= now() - interval '${days} days'
+          GROUP BY DATE_TRUNC('hour', createdAt)
           ORDER BY hour
         `
       };
@@ -322,12 +322,12 @@ class AuditService {
 
       if (filters.startDate) {
         params.push(filters.startDate);
-        query += ` AND al.created_at >= $${++paramCount}`;
+        query += ` AND al.createdAt >= $${++paramCount}`;
       }
 
       if (filters.endDate) {
         params.push(filters.endDate);
-        query += ` AND al.created_at <= $${++paramCount}`;
+        query += ` AND al.createdAt <= $${++paramCount}`;
       }
 
       if (filters.success !== undefined) {
@@ -336,7 +336,7 @@ class AuditService {
       }
 
       // Add ordering and pagination
-      query += ` ORDER BY al.created_at DESC`;
+      query += ` ORDER BY al.createdAt DESC`;
       
       params.push(limit, offset);
       query += ` LIMIT $${++paramCount} OFFSET $${++paramCount}`;
@@ -391,12 +391,12 @@ class AuditService {
         COUNT(CASE WHEN al.operation_type = 'UPDATE' THEN 1 END) as updates,
         COUNT(CASE WHEN al.operation_type = 'DELETE' THEN 1 END) as deletes,
         COUNT(CASE WHEN al.operation_type = 'LOGIN' THEN 1 END) as logins,
-        MAX(al.created_at) as last_activity,
-        MIN(al.created_at) as first_activity
+        MAX(al.createdAt) as last_activity,
+        MIN(al.createdAt) as first_activity
       FROM users u
       LEFT JOIN audit_logs al ON u.id = al.user_id
-      WHERE al.created_at >= COALESCE($1, now() - interval '30 days')
-      AND al.created_at <= COALESCE($2, now())
+      WHERE al.createdAt >= COALESCE($1, now() - interval '30 days')
+      AND al.createdAt <= COALESCE($2, now())
       GROUP BY u.id, u.first_name, u.last_name, u.email
       HAVING COUNT(al.id) > 0
       ORDER BY total_operations DESC
@@ -416,11 +416,11 @@ class AuditService {
         COUNT(DISTINCT user_id) as unique_users,
         COUNT(CASE WHEN success = false THEN 1 END) as failed_operations,
         AVG(duration_ms) as avg_duration_ms,
-        MAX(created_at) as last_operation,
-        MIN(created_at) as first_operation
+        MAX(createdAt) as last_operation,
+        MIN(createdAt) as first_operation
       FROM audit_logs
-      WHERE created_at >= COALESCE($1, now() - interval '30 days')
-      AND created_at <= COALESCE($2, now())
+      WHERE createdAt >= COALESCE($1, now() - interval '30 days')
+      AND createdAt <= COALESCE($2, now())
       GROUP BY table_name, module, operation_type
       ORDER BY operation_count DESC
     `;
@@ -435,12 +435,12 @@ class AuditService {
         event_type,
         severity,
         COUNT(*) as event_count,
-        MAX(created_at) as last_occurrence,
-        MIN(created_at) as first_occurrence
+        MAX(createdAt) as last_occurrence,
+        MIN(createdAt) as first_occurrence
       FROM system_events
       WHERE event_category = 'SECURITY'
-      AND created_at >= COALESCE($1, now() - interval '30 days')
-      AND created_at <= COALESCE($2, now())
+      AND createdAt >= COALESCE($1, now() - interval '30 days')
+      AND createdAt <= COALESCE($2, now())
       GROUP BY event_type, severity
       ORDER BY event_count DESC
     `;
@@ -457,11 +457,11 @@ class AuditService {
         COUNT(*) as access_count,
         COUNT(DISTINCT user_id) as unique_users,
         SUM(result_count) as total_records_accessed,
-        MAX(created_at) as last_access,
-        MIN(created_at) as first_access
+        MAX(createdAt) as last_access,
+        MIN(createdAt) as first_access
       FROM data_access_logs
-      WHERE created_at >= COALESCE($1, now() - interval '30 days')
-      AND created_at <= COALESCE($2, now())
+      WHERE createdAt >= COALESCE($1, now() - interval '30 days')
+      AND createdAt <= COALESCE($2, now())
       GROUP BY table_name, access_type
       ORDER BY access_count DESC
     `;
@@ -511,7 +511,7 @@ class AuditService {
       for (const [tableName, retentionDays] of Object.entries(this.retentionPeriods)) {
         const query = `
           DELETE FROM ${tableName}
-          WHERE created_at < now() - interval '${retentionDays} days'
+          WHERE createdAt < now() - interval '${retentionDays} days'
         `;
         
         const result = await pool.query(query);

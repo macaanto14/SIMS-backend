@@ -108,7 +108,7 @@ async function runFinalAuditMigration() {
             try {
                 await client.query(`
                     UPDATE schools 
-                    SET updated_at = NOW() 
+                    SET updatedAt = NOW() 
                     WHERE id = (SELECT id FROM schools LIMIT 1)
                 `);
                 

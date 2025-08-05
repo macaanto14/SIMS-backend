@@ -9,6 +9,8 @@ import {
 import { BaseEntity } from './base/BaseEntity';
 import { School } from './School';
 import { Class } from './Class';
+import { Term } from './Term';
+import { FeeStructure } from './FeeStructure';
 
 @Entity('academic_years')
 @Index(['schoolId'])
@@ -17,20 +19,17 @@ export class AcademicYear extends BaseEntity {
   @Column({ type: 'varchar', length: 100 })
   name!: string;
 
-  @Column({ type: 'date', nullable: true })
-  startDate?: Date;
+  @Column({ type: 'date', name: 'start_date' })
+  startDate!: Date;
 
-  @Column({ type: 'date', nullable: true })
-  endDate?: Date;
+  @Column({ type: 'date', name: 'end_date' })
+  endDate!: Date;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false, name: 'is_current' })
   isCurrent!: boolean;
 
-  @Column({ type: 'jsonb', default: {} })
-  metadata!: Record<string, any>;
-
   // Relationships
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', name: 'school_id' })
   schoolId!: string;
 
   @ManyToOne(() => School, school => school.academicYears, { onDelete: 'CASCADE' })
@@ -39,6 +38,12 @@ export class AcademicYear extends BaseEntity {
 
   @OneToMany(() => Class, classEntity => classEntity.academicYear)
   classes!: Class[];
+
+  @OneToMany(() => Term, term => term.academicYear)
+  terms!: Term[];
+
+  @OneToMany(() => FeeStructure, feeStructure => feeStructure.academicYear)
+  feeStructures!: FeeStructure[];
 
   // Virtual fields
   get displayName(): string {

@@ -1,10 +1,11 @@
-import { BaseEntity } from './base/BaseEntity';
 import { Role } from './Role';
 import { Permission } from './Permission';
-export declare class RolePermission extends BaseEntity {
+export declare class RolePermission {
+    id: string;
     roleId: string;
     permissionId: string;
-    metadata: Record<string, any>;
+    createdAt: Date;
+    updatedAt: Date;
     role: Role;
     permission: Permission;
 }

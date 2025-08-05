@@ -238,7 +238,7 @@ export class AuthMiddleware {
           // Log access denied
           await this.auditService.logSystemEvent('SCHOOL_ACCESS_DENIED', user.id, {
             schoolId,
-            userSchoolContexts: schoolContexts.map(sc => sc.schoolId),
+            userSchoolContexts: schoolContexts.map(sc => sc.schoolId).filter((id): id is string => id !== null),
             endpoint: req.path,
             method: req.method,
             ipAddress: req.ip,

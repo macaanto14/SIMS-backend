@@ -9,12 +9,12 @@ import { RolePermission } from '../entities/RolePermission';
 export interface UserPermission {
   module: string;
   action: string;
-  schoolId?: string;
+  schoolId?: string | null;
   roleName: string;
 }
 
 export interface SchoolContext {
-  schoolId: string;
+  schoolId: string | null;
   schoolName: string;
   roleName: string;
 }
@@ -69,7 +69,7 @@ export class RBACService {
         permissions.push({
           module: rolePermission.permission.module,
           action: rolePermission.permission.action,
-          schoolId: userRole.schoolId,
+          schoolId: userRole.schoolId || null,
           roleName: userRole.role.name
         });
       }
@@ -120,7 +120,7 @@ export class RBACService {
     return userRoles
       .filter(ur => !ur.expiresAt || ur.expiresAt > new Date())
       .map(ur => ({
-        schoolId: ur.schoolId,
+        schoolId: ur.schoolId || null,
         schoolName: ur.school?.name || 'System',
         roleName: ur.role.name
       }));

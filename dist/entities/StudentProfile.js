@@ -15,10 +15,14 @@ const BaseEntity_1 = require("./base/BaseEntity");
 const User_1 = require("./User");
 const School_1 = require("./School");
 const Class_1 = require("./Class");
+const Attendance_1 = require("./Attendance");
+const Grade_1 = require("./Grade");
+const StudentFee_1 = require("./StudentFee");
 let StudentProfile = class StudentProfile extends BaseEntity_1.BaseEntity {
+    get fullName() {
+        return `${this.user.firstName} ${this.user.lastName}`;
+    }
     get age() {
-        if (!this.dateOfBirth)
-            return null;
         const today = new Date();
         const birthDate = new Date(this.dateOfBirth);
         let age = today.getFullYear() - birthDate.getFullYear();
@@ -28,77 +32,97 @@ let StudentProfile = class StudentProfile extends BaseEntity_1.BaseEntity {
         }
         return age;
     }
-    get displayName() {
-        return this.user?.fullName || 'Unknown Student';
-    }
 };
 exports.StudentProfile = StudentProfile;
 __decorate([
-    (0, typeorm_1.Column)({ type: 'uuid' }),
+    (0, typeorm_1.Column)({ type: 'uuid', name: 'user_id' }),
     __metadata("design:type", String)
 ], StudentProfile.prototype, "userId", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'uuid' }),
+    (0, typeorm_1.Column)({ type: 'uuid', name: 'school_id' }),
     __metadata("design:type", String)
 ], StudentProfile.prototype, "schoolId", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'uuid', nullable: true }),
-    __metadata("design:type", String)
+    (0, typeorm_1.Column)({ type: 'uuid', nullable: true, name: 'class_id' }),
+    __metadata("design:type", Object)
 ], StudentProfile.prototype, "classId", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 50, nullable: true }),
+    (0, typeorm_1.Column)({ type: 'varchar', length: 50, name: 'student_id' }),
     __metadata("design:type", String)
 ], StudentProfile.prototype, "studentId", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 50, nullable: true }),
-    __metadata("design:type", String)
-], StudentProfile.prototype, "rollNumber", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'date', nullable: true }),
-    __metadata("design:type", Date)
-], StudentProfile.prototype, "dateOfBirth", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 10, nullable: true }),
-    __metadata("design:type", String)
-], StudentProfile.prototype, "gender", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 50, nullable: true }),
-    __metadata("design:type", String)
-], StudentProfile.prototype, "bloodGroup", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 20, nullable: true }),
-    __metadata("design:type", String)
-], StudentProfile.prototype, "emergencyContact", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
-    __metadata("design:type", String)
-], StudentProfile.prototype, "address", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'date', nullable: true }),
+    (0, typeorm_1.Column)({ type: 'date', name: 'admission_date' }),
     __metadata("design:type", Date)
 ], StudentProfile.prototype, "admissionDate", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'jsonb', nullable: true }),
-    __metadata("design:type", Object)
-], StudentProfile.prototype, "metadata", void 0);
+    (0, typeorm_1.Column)({ type: 'date', name: 'date_of_birth' }),
+    __metadata("design:type", Date)
+], StudentProfile.prototype, "dateOfBirth", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => User_1.User, user => user.studentProfile),
+    (0, typeorm_1.Column)({ type: 'varchar', length: 10 }),
+    __metadata("design:type", String)
+], StudentProfile.prototype, "gender", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 5, nullable: true, name: 'blood_group' }),
+    __metadata("design:type", Object)
+], StudentProfile.prototype, "bloodGroup", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    __metadata("design:type", Object)
+], StudentProfile.prototype, "address", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 100, nullable: true, name: 'guardian_name' }),
+    __metadata("design:type", Object)
+], StudentProfile.prototype, "guardianName", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 20, nullable: true, name: 'guardian_phone' }),
+    __metadata("design:type", Object)
+], StudentProfile.prototype, "guardianPhone", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 255, nullable: true, name: 'guardian_email' }),
+    __metadata("design:type", Object)
+], StudentProfile.prototype, "guardianEmail", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 20, nullable: true, name: 'emergency_contact' }),
+    __metadata("design:type", Object)
+], StudentProfile.prototype, "emergencyContact", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text', nullable: true, name: 'medical_conditions' }),
+    __metadata("design:type", Object)
+], StudentProfile.prototype, "medicalConditions", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: true }),
+    __metadata("design:type", Boolean)
+], StudentProfile.prototype, "isActive", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => User_1.User, user => user.studentProfile, { onDelete: 'CASCADE' }),
     (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
     __metadata("design:type", User_1.User)
 ], StudentProfile.prototype, "user", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => School_1.School, school => school.studentProfiles),
+    (0, typeorm_1.ManyToOne)(() => School_1.School, school => school.students, { onDelete: 'CASCADE' }),
     (0, typeorm_1.JoinColumn)({ name: 'school_id' }),
     __metadata("design:type", School_1.School)
 ], StudentProfile.prototype, "school", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => Class_1.Class, classEntity => classEntity.students, { nullable: true }),
     (0, typeorm_1.JoinColumn)({ name: 'class_id' }),
-    __metadata("design:type", Class_1.Class)
+    __metadata("design:type", Object)
 ], StudentProfile.prototype, "class", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => Attendance_1.Attendance, attendance => attendance.student),
+    __metadata("design:type", Array)
+], StudentProfile.prototype, "attendanceRecords", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => Grade_1.Grade, grade => grade.student),
+    __metadata("design:type", Array)
+], StudentProfile.prototype, "grades", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => StudentFee_1.StudentFee, fee => fee.student),
+    __metadata("design:type", Array)
+], StudentProfile.prototype, "fees", void 0);
 exports.StudentProfile = StudentProfile = __decorate([
     (0, typeorm_1.Entity)('student_profiles'),
-    (0, typeorm_1.Index)(['userId'], { unique: true }),
     (0, typeorm_1.Index)(['schoolId']),
     (0, typeorm_1.Index)(['classId']),
     (0, typeorm_1.Index)(['isActive'])

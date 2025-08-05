@@ -1,42 +1,9 @@
 import { DataSource } from 'typeorm';
-import { DefaultNamingStrategy, NamingStrategyInterface } from 'typeorm';
-import { snakeCase } from 'typeorm/util/StringUtils';
 import { config } from 'dotenv';
 import path from 'path';
 
 // Load environment variables
 config();
-
-// Custom naming strategy to convert camelCase to snake_case
-class SnakeCaseNamingStrategy extends DefaultNamingStrategy implements NamingStrategyInterface {
-  tableName(className: string, customName: string): string {
-    return customName ? customName : snakeCase(className);
-  }
-
-  columnName(propertyName: string, customName: string, embeddedPrefixes: string[]): string {
-    return customName ? customName : snakeCase(propertyName);
-  }
-
-  relationName(propertyName: string): string {
-    return snakeCase(propertyName);
-  }
-
-  joinColumnName(relationName: string, referencedColumnName: string): string {
-    return snakeCase(relationName + '_' + referencedColumnName);
-  }
-
-  joinTableName(firstTableName: string, secondTableName: string, firstPropertyName: string, secondPropertyName: string): string {
-    return snakeCase(firstTableName + '_' + secondTableName);
-  }
-
-  joinTableColumnName(tableName: string, propertyName: string, columnName?: string): string {
-    return snakeCase(tableName + '_' + (columnName ? columnName : propertyName));
-  }
-
-  classTableInheritanceParentColumnName(parentTableName: any, parentTableIdPropertyName: any): string {
-    return snakeCase(parentTableName + '_' + parentTableIdPropertyName);
-  }
-}
 
 // Create cache configuration conditionally
 const createCacheConfig = () => {
@@ -70,8 +37,8 @@ export const AppDataSource = new DataSource({
   migrations: [path.join(__dirname, '../migrations/**/*.{ts,js}')],
   subscribers: [path.join(__dirname, '../subscribers/**/*.{ts,js}')],
   
-  // Naming strategy
-  namingStrategy: new SnakeCaseNamingStrategy(),
+  // Remove the snake case naming strategy since database uses camelCase
+  // namingStrategy: new SnakeCaseNamingStrategy(), // REMOVED
   
   // Development settings - temporarily disable synchronize to prevent schema conflicts
   synchronize: false, // Disabled to prevent NOT NULL constraint errors

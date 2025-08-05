@@ -83,7 +83,7 @@ class AuditMiddleware {
         action: `${operation.toUpperCase()}_${tableName.toUpperCase()}`,
         description: `${operation} operation on ${tableName}`,
         success: true,
-        created_at: new Date()
+        createdAt: new Date()
       };
 
       const auditId = await this.insertAuditLog(auditLog);
@@ -133,7 +133,7 @@ class AuditMiddleware {
           deviceInfo: details.deviceInfo,
           location: details.location
         },
-        created_at: new Date()
+        createdAt: new Date()
       };
 
       await this.insertAuditLog(auditLog);
@@ -174,7 +174,7 @@ class AuditMiddleware {
         purpose: details.purpose,
         ip_address: details.ipAddress,
         user_agent: details.userAgent,
-        created_at: new Date()  // Fixed: was accessed_at
+        createdAt: new Date()  // Fixed: was accessed_at
       };
 
       await this.insertDataAccessLog(accessLog);
@@ -204,7 +204,7 @@ class AuditMiddleware {
         user_id: details.triggeredBy,
         school_id: details.schoolId,
         ip_address: details.ipAddress,
-        created_at: new Date()
+        createdAt: new Date()
       };
 
       await this.insertSystemEvent(systemEvent);
@@ -373,7 +373,7 @@ class AuditMiddleware {
           query: req.query,
           statusCode: res.statusCode
         },
-        created_at: new Date()
+        createdAt: new Date()
       };
 
       await this.insertAuditLog(auditLog);
@@ -413,7 +413,7 @@ class AuditMiddleware {
         operation_type, table_name, record_id, user_id, user_email, user_role,
         school_id, ip_address, user_agent, request_id, session_id, old_values,
         new_values, changed_fields, description, module, action, success,
-        error_message, duration_ms, created_at
+        error_message, duration_ms, createdAt
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
       ) RETURNING id
@@ -427,7 +427,7 @@ class AuditMiddleware {
       JSON.stringify(auditLog.old_values), JSON.stringify(auditLog.new_values),
       auditLog.changed_fields, auditLog.description, auditLog.module,
       auditLog.action, auditLog.success, auditLog.error_message,
-      auditLog.duration_ms, auditLog.created_at
+      auditLog.duration_ms, auditLog.createdAt
     ];
 
     const result = await pool.query(query, values);
@@ -439,7 +439,7 @@ class AuditMiddleware {
       INSERT INTO data_access_logs (
         user_id, table_name, record_id, access_type, query_type,
         filters_applied, result_count, purpose, ip_address,
-        user_agent, created_at
+        user_agent, createdAt
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
       ) RETURNING id
@@ -450,7 +450,7 @@ class AuditMiddleware {
       accessLog.access_type, accessLog.query_type,
       JSON.stringify(accessLog.filters_applied), accessLog.result_count,
       accessLog.purpose, accessLog.ip_address, accessLog.user_agent,
-      accessLog.created_at
+      accessLog.createdAt
     ];
 
     const result = await pool.query(query, values);
@@ -461,7 +461,7 @@ class AuditMiddleware {
     const query = `
       INSERT INTO system_events (
         event_type, event_category, severity, title, description, details,
-        user_id, school_id, ip_address, created_at
+        user_id, school_id, ip_address, createdAt
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
       ) RETURNING id
@@ -471,7 +471,7 @@ class AuditMiddleware {
       systemEvent.event_type, systemEvent.event_category, systemEvent.severity,
       systemEvent.title, systemEvent.description, JSON.stringify(systemEvent.details),
       systemEvent.user_id, systemEvent.school_id, systemEvent.ip_address,
-      systemEvent.created_at
+      systemEvent.createdAt
     ];
 
     const result = await pool.query(query, values);

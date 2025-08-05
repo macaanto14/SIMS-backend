@@ -16,46 +16,46 @@ const User_1 = require("./User");
 const School_1 = require("./School");
 let ParentProfile = class ParentProfile extends BaseEntity_1.BaseEntity {
     get displayName() {
-        return `${this.relationship} - ${this.user?.fullName || 'Unknown'}`;
+        return this.user?.fullName || 'Unknown Parent';
     }
 };
 exports.ParentProfile = ParentProfile;
 __decorate([
-    (0, typeorm_1.Column)({ type: 'uuid' }),
+    (0, typeorm_1.Column)({ type: 'uuid', name: 'user_id' }),
     __metadata("design:type", String)
 ], ParentProfile.prototype, "userId", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'uuid' }),
+    (0, typeorm_1.Column)({ type: 'uuid', name: 'school_id' }),
     __metadata("design:type", String)
 ], ParentProfile.prototype, "schoolId", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 50 }),
-    __metadata("design:type", String)
-], ParentProfile.prototype, "relationship", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 100, nullable: true }),
     __metadata("design:type", Object)
 ], ParentProfile.prototype, "occupation", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 20, nullable: true }),
-    __metadata("design:type", Object)
-], ParentProfile.prototype, "phone", void 0);
-__decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 255, nullable: true }),
     __metadata("design:type", Object)
-], ParentProfile.prototype, "email", void 0);
+], ParentProfile.prototype, "workplace", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'decimal', precision: 12, scale: 2, nullable: true, name: 'annual_income' }),
+    __metadata("design:type", Object)
+], ParentProfile.prototype, "annualIncome", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'text', nullable: true }),
     __metadata("design:type", Object)
 ], ParentProfile.prototype, "address", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 20, nullable: true }),
+    (0, typeorm_1.Column)({ type: 'varchar', length: 20, nullable: true, name: 'emergency_contact' }),
     __metadata("design:type", Object)
 ], ParentProfile.prototype, "emergencyContact", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'jsonb', nullable: true }),
+    (0, typeorm_1.Column)({ type: 'varchar', length: 50, nullable: true, name: 'relationship_to_student' }),
     __metadata("design:type", Object)
-], ParentProfile.prototype, "metadata", void 0);
+], ParentProfile.prototype, "relationshipToStudent", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: true }),
+    __metadata("design:type", Boolean)
+], ParentProfile.prototype, "isActive", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => User_1.User, user => user.parentProfile),
     (0, typeorm_1.JoinColumn)({ name: 'user_id' }),

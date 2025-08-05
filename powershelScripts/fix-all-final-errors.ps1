@@ -90,7 +90,7 @@ export class UserService {
       [users, total] = await this.userRepository.findAndCount({
         skip: (page - 1) * limit,
         take: limit,
-        order: { createdAt: 'DESC' },
+        order: { created_at: 'DESC' },
       });
     }
 

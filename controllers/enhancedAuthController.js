@@ -303,7 +303,7 @@ const getProfile = async (req, res) => {
     const userId = req.user.id;
     
     const userResult = await pool.query(`
-      SELECT u.id, u.email, u.first_name, u.last_name, u.phone, u.avatar_url, u.created_at,
+      SELECT u.id, u.email, u.first_name, u.last_name, u.phone, u.avatar_url, u.createdAt,
              ur.role_id, r.name as role_name, ur.school_id, s.name as school_name,
              r.description as role_description
       FROM users u
@@ -335,7 +335,7 @@ const getProfile = async (req, res) => {
       lastName: user.last_name,
       phone: user.phone,
       avatarUrl: user.avatar_url,
-      createdAt: user.created_at,
+      createdAt: user.createdAt,
       currentRole: req.user.selectedRole,
       allRoles: roles,
       permissions: await getUserPermissions(userId, req.user.selectedRole || roles[0]?.roleName)
@@ -372,7 +372,7 @@ const register = async (req, res) => {
     const userResult = await client.query(`
       INSERT INTO users (email, password_hash, first_name, last_name, phone, is_active)
       VALUES ($1, $2, $3, $4, $5, true)
-      RETURNING id, email, first_name, last_name, phone, created_at
+      RETURNING id, email, first_name, last_name, phone, createdAt
     `, [email, password_hash, first_name, last_name, phone]);
     
     const user = userResult.rows[0];
@@ -413,7 +413,7 @@ const register = async (req, res) => {
         firstName: user.first_name,
         lastName: user.last_name,
         phone: user.phone,
-        createdAt: user.created_at
+        createdAt: user.createdAt
       },
       token
     }, 'User registered successfully', 201);

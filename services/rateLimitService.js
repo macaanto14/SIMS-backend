@@ -32,7 +32,7 @@ class RateLimitService {
         
         // Increment count
         await client.query(
-          `UPDATE sms_rate_limits SET count = count + 1, updated_at = NOW() 
+          `UPDATE sms_rate_limits SET count = count + 1, updatedAt = NOW() 
            WHERE identifier = $1 AND limit_type = 'phone'`,
           [phoneHash]
         );
@@ -73,7 +73,7 @@ class RateLimitService {
         
         // Increment count
         await client.query(
-          `UPDATE sms_rate_limits SET count = count + 1, updated_at = NOW() 
+          `UPDATE sms_rate_limits SET count = count + 1, updatedAt = NOW() 
            WHERE identifier = 'global' AND limit_type = 'global'`
         );
       } else {
@@ -123,7 +123,7 @@ class RateLimitService {
         
         // Increment count
         await client.query(
-          `UPDATE sms_rate_limits SET count = count + 1, updated_at = NOW() 
+          `UPDATE sms_rate_limits SET count = count + 1, updatedAt = NOW() 
            WHERE identifier = $1 AND limit_type = 'purpose' AND purpose = $2`,
           [phoneHash, purpose]
         );
@@ -166,7 +166,7 @@ class RateLimitService {
         
         // Increment count
         await client.query(
-          `UPDATE sms_rate_limits SET count = count + 1, updated_at = NOW() 
+          `UPDATE sms_rate_limits SET count = count + 1, updatedAt = NOW() 
            WHERE identifier = $1 AND limit_type = 'ip'`,
           [ipHash]
         );

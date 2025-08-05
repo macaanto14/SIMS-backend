@@ -18,12 +18,9 @@ const AcademicYear_1 = require("./AcademicYear");
 const TeacherProfile_1 = require("./TeacherProfile");
 const StudentProfile_1 = require("./StudentProfile");
 const ParentProfile_1 = require("./ParentProfile");
+const Subject_1 = require("./Subject");
+const FeeStructure_1 = require("./FeeStructure");
 let School = class School extends BaseEntity_1.BaseEntity {
-    get isSubscriptionActive() {
-        if (!this.subscriptionExpiresAt)
-            return false;
-        return new Date() < this.subscriptionExpiresAt;
-    }
     get displayName() {
         return this.name;
     }
@@ -34,8 +31,8 @@ __decorate([
     __metadata("design:type", String)
 ], School.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 100, nullable: true }),
-    __metadata("design:type", Object)
+    (0, typeorm_1.Column)({ type: 'varchar', length: 50 }),
+    __metadata("design:type", String)
 ], School.prototype, "code", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'text', nullable: true }),
@@ -56,23 +53,40 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({ type: 'text', nullable: true }),
     __metadata("design:type", Object)
-], School.prototype, "logo", void 0);
+], School.prototype, "logoUrl", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 50, default: 'active' }),
-    __metadata("design:type", String)
-], School.prototype, "subscriptionStatus", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'timestamptz', nullable: true }),
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
     __metadata("design:type", Object)
-], School.prototype, "subscriptionExpiresAt", void 0);
+], School.prototype, "description", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'jsonb', nullable: true }),
+    (0, typeorm_1.Column)({ type: 'varchar', length: 100, nullable: true }),
+    __metadata("design:type", Object)
+], School.prototype, "establishedYear", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 100, nullable: true }),
+    __metadata("design:type", Object)
+], School.prototype, "principalName", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'uuid', nullable: true }),
+    __metadata("design:type", Object)
+], School.prototype, "principalId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'jsonb', default: '{}' }),
     __metadata("design:type", Object)
 ], School.prototype, "settings", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'jsonb', nullable: true }),
+    (0, typeorm_1.Column)({ type: 'jsonb', default: '{}' }),
     __metadata("design:type", Object)
 ], School.prototype, "metadata", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: true }),
+    __metadata("design:type", Boolean)
+], School.prototype, "isActive", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => User_1.User, { nullable: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'principalId' }),
+    __metadata("design:type", Object)
+], School.prototype, "principal", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => User_1.User, user => user.school),
     __metadata("design:type", Array)
@@ -86,20 +100,32 @@ __decorate([
     __metadata("design:type", Array)
 ], School.prototype, "academicYears", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => TeacherProfile_1.TeacherProfile, profile => profile.school),
+    (0, typeorm_1.OneToMany)(() => TeacherProfile_1.TeacherProfile, teacher => teacher.school),
     __metadata("design:type", Array)
-], School.prototype, "teacherProfiles", void 0);
+], School.prototype, "teachers", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => StudentProfile_1.StudentProfile, profile => profile.school),
+    (0, typeorm_1.OneToMany)(() => StudentProfile_1.StudentProfile, student => student.school),
     __metadata("design:type", Array)
-], School.prototype, "studentProfiles", void 0);
+], School.prototype, "students", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => ParentProfile_1.ParentProfile, profile => profile.school),
+    (0, typeorm_1.OneToMany)(() => ParentProfile_1.ParentProfile, parent => parent.school),
+    __metadata("design:type", Array)
+], School.prototype, "parents", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => ParentProfile_1.ParentProfile, parent => parent.school),
     __metadata("design:type", Array)
 ], School.prototype, "parentProfiles", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => Subject_1.Subject, subject => subject.school),
+    __metadata("design:type", Array)
+], School.prototype, "subjects", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => FeeStructure_1.FeeStructure, feeStructure => feeStructure.school),
+    __metadata("design:type", Array)
+], School.prototype, "feeStructures", void 0);
 exports.School = School = __decorate([
     (0, typeorm_1.Entity)('schools'),
     (0, typeorm_1.Index)(['isActive']),
-    (0, typeorm_1.Index)(['subscriptionStatus'])
+    (0, typeorm_1.Index)(['code'], { unique: true })
 ], School);
 //# sourceMappingURL=School.js.map

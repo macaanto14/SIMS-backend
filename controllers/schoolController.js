@@ -6,10 +6,10 @@ const getSchools = async (req, res) => {
   try {
     // Simple query without complex filtering for testing
     const result = await pool.query(`
-      SELECT id, name, code, address, phone, email, is_active, created_at
+      SELECT id, name, code, address, phone, email, is_active, createdAt
       FROM schools 
       WHERE is_active = true 
-      ORDER BY created_at DESC 
+      ORDER BY createdAt DESC 
       LIMIT 10
     `);
     
@@ -21,7 +21,7 @@ const getSchools = async (req, res) => {
       phone: school.phone,
       email: school.email,
       isActive: school.is_active,
-      createdAt: school.created_at
+      createdAt: school.createdAt
     }));
     
     successResponse(res, { schools, total: schools.length });
@@ -67,8 +67,8 @@ const getSchoolById = async (req, res) => {
       logoUrl: school.logo_url,
       settings: school.settings,
       isActive: school.is_active,
-      createdAt: school.created_at,
-      updatedAt: school.updated_at,
+      createdAt: school.createdAt,
+      updatedAt: school.updatedAt,
       principal: school.principal_first_name ? {
         firstName: school.principal_first_name,
         lastName: school.principal_last_name,
@@ -132,7 +132,7 @@ const createSchool = async (req, res) => {
       website: result.website,
       logoUrl: result.logo_url,
       settings: result.settings,
-      createdAt: result.created_at
+      createdAt: result.createdAt
     }, 'School created successfully', 201);
     
   } catch (error) {
@@ -167,7 +167,7 @@ const updateSchool = async (req, res) => {
                logo_url = COALESCE($6, logo_url),
                principal_id = COALESCE($7, principal_id),
                settings = COALESCE($8, settings),
-               updated_at = NOW()
+               updatedAt = NOW()
            WHERE id = $9 AND is_active = true
            RETURNING *`,
           [name, address, phone, email, website, logo_url, principal_id, settings, id]
@@ -201,7 +201,7 @@ const updateSchool = async (req, res) => {
       website: result.website,
       logoUrl: result.logo_url,
       settings: result.settings,
-      updatedAt: result.updated_at
+      updatedAt: result.updatedAt
     }, 'School updated successfully');
     
   } catch (error) {

@@ -9,8 +9,23 @@ class AuditService {
     }
     async logAuthEvent(action, userId, data) {
         try {
+            let operationType;
+            switch (action.toUpperCase()) {
+                case 'LOGIN':
+                    operationType = AuditLog_1.OperationType.LOGIN;
+                    break;
+                case 'LOGOUT':
+                    operationType = AuditLog_1.OperationType.LOGOUT;
+                    break;
+                case 'REGISTER':
+                case 'CREATE':
+                    operationType = AuditLog_1.OperationType.CREATE;
+                    break;
+                default:
+                    operationType = AuditLog_1.OperationType.ACCESS;
+            }
             const auditLog = this.auditRepository.create({
-                operationType: action,
+                operationType,
                 tableName: 'auth',
                 recordId: null,
                 userId,
@@ -136,8 +151,23 @@ class AuditService {
     }
     async logDatabaseOperation(data) {
         try {
+            let operationType;
+            switch (data.operation.toUpperCase()) {
+                case 'CREATE':
+                case 'INSERT':
+                    operationType = AuditLog_1.OperationType.CREATE;
+                    break;
+                case 'UPDATE':
+                    operationType = AuditLog_1.OperationType.UPDATE;
+                    break;
+                case 'DELETE':
+                    operationType = AuditLog_1.OperationType.DELETE;
+                    break;
+                default:
+                    operationType = AuditLog_1.OperationType.ACCESS;
+            }
             const auditLog = this.auditRepository.create({
-                operationType: data.operation.toUpperCase(),
+                operationType,
                 tableName: data.table,
                 recordId: null,
                 userId: data.userId || null,

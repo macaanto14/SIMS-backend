@@ -62,12 +62,12 @@ const getAuditLogs = async (req, res) => {
     }
 
     if (start_date) {
-      whereConditions.push(`al.created_at >= $${paramIndex++}`);
+      whereConditions.push(`al.createdAt >= $${paramIndex++}`);
       queryParams.push(start_date);
     }
 
     if (end_date) {
-      whereConditions.push(`al.created_at <= $${paramIndex++}`);
+      whereConditions.push(`al.createdAt <= $${paramIndex++}`);
       queryParams.push(end_date);
     }
 
@@ -102,7 +102,7 @@ const getAuditLogs = async (req, res) => {
         al.success,
         al.error_message,
         al.duration_ms,
-        al.created_at,
+        al.createdAt,
         CASE 
           WHEN al.changed_fields IS NOT NULL THEN array_length(al.changed_fields, 1)
           ELSE 0
@@ -110,7 +110,7 @@ const getAuditLogs = async (req, res) => {
       FROM audit_logs al
       LEFT JOIN schools s ON al.school_id = s.id
       ${whereClause}
-      ORDER BY al.created_at DESC
+      ORDER BY al.createdAt DESC
       LIMIT $${paramIndex++} OFFSET $${paramIndex++}
     `;
 
@@ -257,7 +257,7 @@ const getUserActivitySummary = async (req, res) => {
   try {
     const { days = 30, user_id } = req.query;
 
-    let whereClause = `WHERE al.created_at >= (now() - interval '${days} days')`;
+    let whereClause = `WHERE al.createdAt >= (now() - interval '${days} days')`;
     let queryParams = [];
 
     if (user_id) {
@@ -283,8 +283,8 @@ const getUserActivitySummary = async (req, res) => {
         COUNT(CASE WHEN al.operation_type = 'DELETE' THEN 1 END) as deletes,
         COUNT(CASE WHEN al.operation_type = 'LOGIN' THEN 1 END) as logins,
         COUNT(CASE WHEN al.success = false THEN 1 END) as failed_operations,
-        MAX(al.created_at) as last_activity,
-        MIN(al.created_at) as first_activity,
+        MAX(al.createdAt) as last_activity,
+        MIN(al.createdAt) as first_activity,
         array_agg(DISTINCT al.module) FILTER (WHERE al.module IS NOT NULL) as modules_accessed
       FROM users u
       LEFT JOIN audit_logs al ON u.id = al.user_id
@@ -366,21 +366,21 @@ const getSystemActivityDashboard = async (req, res) => {
         COUNT(DISTINCT al.user_id) as active_users,
         COUNT(DISTINCT al.table_name) as affected_tables
       FROM audit_logs al
-      WHERE al.created_at >= (now() - interval '$1 days')
+      WHERE al.createdAt >= (now() - interval '$1 days')
       ${schoolFilter}
     `;
 
     // Get daily activity trend
     const trendQuery = `
       SELECT 
-        DATE(al.created_at) as activity_date,
+        DATE(al.createdAt) as activity_date,
         COUNT(*) as operations_count,
         COUNT(DISTINCT al.user_id) as unique_users,
         COUNT(CASE WHEN al.success = false THEN 1 END) as failed_operations
       FROM audit_logs al
-      WHERE al.created_at >= (now() - interval '$1 days')
+      WHERE al.createdAt >= (now() - interval '$1 days')
       ${schoolFilter}
-      GROUP BY DATE(al.created_at)
+      GROUP BY DATE(al.createdAt)
       ORDER BY activity_date DESC
     `;
 
@@ -391,7 +391,7 @@ const getSystemActivityDashboard = async (req, res) => {
         COUNT(*) as operations_count,
         COUNT(DISTINCT al.user_id) as unique_users
       FROM audit_logs al
-      WHERE al.created_at >= (now() - interval '$1 days')
+      WHERE al.createdAt >= (now() - interval '$1 days')
       ${schoolFilter}
       GROUP BY al.module
       ORDER BY operations_count DESC
@@ -405,17 +405,17 @@ const getSystemActivityDashboard = async (req, res) => {
         al.table_name,
         al.user_email,
         al.description,
-        al.created_at,
+        al.createdAt,
         al.success
       FROM audit_logs al
-      WHERE al.created_at >= (now() - interval '$1 days')
+      WHERE al.createdAt >= (now() - interval '$1 days')
       ${schoolFilter}
       AND (
         al.operation_type = 'DELETE' 
         OR al.table_name IN ('users', 'user_roles', 'schools')
         OR al.success = false
       )
-      ORDER BY al.created_at DESC
+      ORDER BY al.createdAt DESC
       LIMIT 20
     `;
 
@@ -500,12 +500,12 @@ const exportAuditLogs = async (req, res) => {
 
     // Build filters
     if (start_date) {
-      whereConditions.push(`al.created_at >= $${paramIndex++}`);
+      whereConditions.push(`al.createdAt >= $${paramIndex++}`);
       queryParams.push(start_date);
     }
 
     if (end_date) {
-      whereConditions.push(`al.created_at <= $${paramIndex++}`);
+      whereConditions.push(`al.createdAt <= $${paramIndex++}`);
       queryParams.push(end_date);
     }
 
@@ -539,7 +539,7 @@ const exportAuditLogs = async (req, res) => {
 
     const query = `
       SELECT 
-        al.created_at,
+        al.createdAt,
         al.operation_type,
         al.table_name,
         al.user_email,
@@ -555,7 +555,7 @@ const exportAuditLogs = async (req, res) => {
       FROM audit_logs al
       LEFT JOIN schools s ON al.school_id = s.id
       ${whereClause}
-      ORDER BY al.created_at DESC
+      ORDER BY al.createdAt DESC
       LIMIT 10000
     `;
 

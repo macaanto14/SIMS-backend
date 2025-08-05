@@ -55,9 +55,9 @@ const register = async (req, res) => {
     
     // Create new user record in database
     const userResult = await client.query(
-      `INSERT INTO users (email, password_hash, first_name, last_name, phone, created_at, updated_at) 
+      `INSERT INTO users (email, password_hash, first_name, last_name, phone, createdAt, updatedAt) 
        VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) 
-       RETURNING id, email, first_name, last_name, created_at`,
+       RETURNING id, email, first_name, last_name, createdAt`,
       [email.toLowerCase(), hashedPassword, first_name, last_name, phone]
     );
     
@@ -89,7 +89,7 @@ const register = async (req, res) => {
         email: newUser.email,
         firstName: newUser.first_name,
         lastName: newUser.last_name,
-        createdAt: newUser.created_at
+        createdAt: newUser.createdAt
       },
       tokens: {
         accessToken: token,
@@ -166,7 +166,7 @@ const login = async (req, res) => {
     
     // Update last login timestamp
     await query(
-      'UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = $1',
+      'UPDATE users SET last_login_at = NOW(), updatedAt = NOW() WHERE id = $1',
       [user.id]
     );
     
@@ -242,7 +242,7 @@ const getProfile = async (req, res) => {
     // Retrieve comprehensive user profile data
     const userResult = await query(
       `SELECT u.id, u.email, u.first_name, u.last_name, u.phone, 
-              u.avatar_url, u.created_at, u.last_login_at,
+              u.avatar_url, u.createdAt, u.last_login_at,
               ur.role_id, r.name as role_name, r.description as role_description,
               ur.school_id, s.name as school_name, s.code as school_code
        FROM users u
@@ -288,7 +288,7 @@ const getProfile = async (req, res) => {
       lastName: user.last_name,
       phone: user.phone,
       avatarUrl: user.avatar_url,
-      createdAt: user.created_at,
+      createdAt: user.createdAt,
       lastLoginAt: user.last_login_at,
       roles
     });

@@ -93,7 +93,7 @@ class EventDrivenUserService extends EventEmitter {
           LEFT JOIN roles r ON ur.role_id = r.id
           WHERE ${whereClause}
           GROUP BY u.id
-          ORDER BY u.created_at DESC
+          ORDER BY u.createdAt DESC
           LIMIT $${params.length + 1} OFFSET $${params.length + 2}
         `, [...params, limit, offset])
       ]);
@@ -136,7 +136,7 @@ class EventDrivenUserService extends EventEmitter {
             last_name = COALESCE($2, last_name),
             phone = COALESCE($3, phone),
             avatar_url = COALESCE($4, avatar_url),
-            updated_at = NOW()
+            updatedAt = NOW()
         WHERE id = $5 AND is_active = true
         RETURNING *
       `, [updateData.first_name, updateData.last_name, updateData.phone, updateData.avatar_url, userId]);
@@ -221,7 +221,7 @@ class EventDrivenUserService extends EventEmitter {
   async handleActivityLog(activity) {
     try {
       await executeQuery(`
-        INSERT INTO user_activities (user_id, action, metadata, created_at)
+        INSERT INTO user_activities (user_id, action, metadata, createdAt)
         VALUES ($1, $2, $3, NOW())
       `, [activity.userId, activity.action, JSON.stringify(activity.metadata)]);
     } catch (error) {

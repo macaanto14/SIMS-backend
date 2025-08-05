@@ -46,19 +46,16 @@ exports.User = void 0;
 const typeorm_1 = require("typeorm");
 const BaseEntity_1 = require("./base/BaseEntity");
 const School_1 = require("./School");
-const UserRole_1 = require("./UserRole");
-const TeacherProfile_1 = require("./TeacherProfile");
 const StudentProfile_1 = require("./StudentProfile");
+const TeacherProfile_1 = require("./TeacherProfile");
 const ParentProfile_1 = require("./ParentProfile");
+const Attendance_1 = require("./Attendance");
+const Grade_1 = require("./Grade");
+const FeePayment_1 = require("./FeePayment");
+const UserRole_1 = require("./UserRole");
 const AuditLog_1 = require("./AuditLog");
 const bcrypt = __importStar(require("bcryptjs"));
 let User = class User extends BaseEntity_1.BaseEntity {
-    get fullName() {
-        return `${this.firstName} ${this.lastName}`.trim();
-    }
-    get displayName() {
-        return this.fullName || this.email;
-    }
     async hashPassword() {
         if (this.password && !this.password.startsWith('$2')) {
             this.password = await bcrypt.hash(this.password, 12);
@@ -67,20 +64,20 @@ let User = class User extends BaseEntity_1.BaseEntity {
     async validatePassword(password) {
         return bcrypt.compare(password, this.password);
     }
-    toJSON() {
-        const { password, resetPasswordToken, ...result } = this;
-        return result;
+    get fullName() {
+        return `${this.firstName} ${this.lastName}`;
+    }
+    get displayName() {
+        return `${this.fullName}`;
+    }
+    get lastLogin() {
+        return this.lastLoginAt;
+    }
+    set lastLogin(value) {
+        this.lastLoginAt = value;
     }
 };
 exports.User = User;
-__decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 255, unique: true }),
-    __metadata("design:type", String)
-], User.prototype, "email", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 255 }),
-    __metadata("design:type", String)
-], User.prototype, "password", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 100 }),
     __metadata("design:type", String)
@@ -89,6 +86,14 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 100 }),
     __metadata("design:type", String)
 ], User.prototype, "lastName", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 255, unique: true }),
+    __metadata("design:type", String)
+], User.prototype, "email", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 255 }),
+    __metadata("design:type", String)
+], User.prototype, "password", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 20, nullable: true }),
     __metadata("design:type", Object)
@@ -102,7 +107,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], User.prototype, "emailVerified", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'timestamptz', nullable: true }),
+    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
     __metadata("design:type", Object)
 ], User.prototype, "emailVerifiedAt", void 0);
 __decorate([
@@ -110,11 +115,11 @@ __decorate([
     __metadata("design:type", Object)
 ], User.prototype, "resetPasswordToken", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'timestamptz', nullable: true }),
+    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
     __metadata("design:type", Object)
 ], User.prototype, "resetPasswordExpires", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'timestamptz', nullable: true }),
+    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
     __metadata("design:type", Object)
 ], User.prototype, "lastLoginAt", void 0);
 __decorate([
@@ -134,30 +139,46 @@ __decorate([
     __metadata("design:type", Object)
 ], User.prototype, "schoolId", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: true }),
+    __metadata("design:type", Boolean)
+], User.prototype, "isActive", void 0);
+__decorate([
     (0, typeorm_1.ManyToOne)(() => School_1.School, school => school.users, { nullable: true }),
-    (0, typeorm_1.JoinColumn)({ name: 'school_id' }),
+    (0, typeorm_1.JoinColumn)({ name: 'schoolId' }),
     __metadata("design:type", Object)
 ], User.prototype, "school", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => UserRole_1.UserRole, userRole => userRole.user, { cascade: true }),
+    (0, typeorm_1.OneToMany)(() => UserRole_1.UserRole, userRole => userRole.user),
     __metadata("design:type", Array)
 ], User.prototype, "userRoles", void 0);
-__decorate([
-    (0, typeorm_1.OneToMany)(() => TeacherProfile_1.TeacherProfile, profile => profile.user),
-    __metadata("design:type", Array)
-], User.prototype, "teacherProfile", void 0);
-__decorate([
-    (0, typeorm_1.OneToMany)(() => StudentProfile_1.StudentProfile, profile => profile.user),
-    __metadata("design:type", Array)
-], User.prototype, "studentProfile", void 0);
-__decorate([
-    (0, typeorm_1.OneToMany)(() => ParentProfile_1.ParentProfile, profile => profile.user),
-    __metadata("design:type", Array)
-], User.prototype, "parentProfile", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => AuditLog_1.AuditLog, auditLog => auditLog.user),
     __metadata("design:type", Array)
 ], User.prototype, "auditLogs", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)(() => StudentProfile_1.StudentProfile, student => student.user),
+    __metadata("design:type", StudentProfile_1.StudentProfile)
+], User.prototype, "studentProfile", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)(() => TeacherProfile_1.TeacherProfile, teacher => teacher.user),
+    __metadata("design:type", TeacherProfile_1.TeacherProfile)
+], User.prototype, "teacherProfile", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)(() => ParentProfile_1.ParentProfile, parent => parent.user),
+    __metadata("design:type", ParentProfile_1.ParentProfile)
+], User.prototype, "parentProfile", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => Attendance_1.Attendance, attendance => attendance.markedByUser),
+    __metadata("design:type", Array)
+], User.prototype, "markedAttendance", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => Grade_1.Grade, grade => grade.assessedByUser),
+    __metadata("design:type", Array)
+], User.prototype, "assessedGrades", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => FeePayment_1.FeePayment, payment => payment.receivedByUser),
+    __metadata("design:type", Array)
+], User.prototype, "receivedPayments", void 0);
 __decorate([
     (0, typeorm_1.BeforeInsert)(),
     (0, typeorm_1.BeforeUpdate)(),

@@ -46,7 +46,7 @@ class SMSAnalyticsService {
     try {
       await client.query(
         `UPDATE sms_analytics 
-         SET status = $1, response_time = $2, updated_at = NOW()
+         SET status = $1, response_time = $2, updatedAt = NOW()
          WHERE twilio_sid = $3`,
         [
           twilioWebhook.MessageStatus,
@@ -71,7 +71,7 @@ class SMSAnalyticsService {
     try {
       await client.query(
         `UPDATE sms_analytics 
-         SET status = $1, updated_at = NOW()
+         SET status = $1, updatedAt = NOW()
          WHERE twilio_sid = $2`,
         [data.status, data.twilioSid]
       );
