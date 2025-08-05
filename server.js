@@ -14,8 +14,8 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const schoolRoutes = require('./routes/schools');
 const academicRoutes = require('./routes/academic');
-// const auditRoutes = require('./routes/audit'); // Temporarily disabled due to syntax errors
-const smsRoutes = require('./routes/sms'); // Add SMS routes import
+const auditRoutes = require('./routes/audit'); // Uncomment this line
+const smsRoutes = require('./routes/sms');
 
 // Import database connection
 const pool = require('./config/database');
@@ -45,20 +45,31 @@ app.use(helmet({
 }));
 
 // Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
-  message: {
-    error: 'Too many requests from this IP, please try again later.'
-  }
-});
-app.use(limiter);
+// Rate limiting
+// Rate limiting - Temporarily disabled for development
+// const limiter = rateLimit({
+//   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+//   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
+//   message: {
+//     error: 'Too many requests from this IP, please try again later.'
+//   }
+// });
+// app.use(limiter);
 
 // CORS configuration
+// CORS configuration
+const getAllowedOrigins = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [];
+  }
+  // Development mode - use env variable or fallback to defaults
+  return process.env.ALLOWED_ORIGINS 
+    ? process.env.ALLOWED_ORIGINS.split(',')
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
+};
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? [] // Add your production domains
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
+  origin: getAllowedOrigins(),
   credentials: true
 }));
 
@@ -546,7 +557,8 @@ app.get('/api', (req, res) => {
       auth: `${baseUrl}/api/auth`,
       users: `${baseUrl}/api/users`,
       schools: `${baseUrl}/api/schools`,
-      academic: `${baseUrl}/api`
+      academic: `${baseUrl}/api/academic`,
+      audit: `${baseUrl}/api/audit` // Add this line
     },
     timestamp: new Date().toISOString()
   });
@@ -588,10 +600,11 @@ app.get('/health', async (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/schools', schoolRoutes);
-app.use('/api', academicRoutes);
-// app.use('/api/audit', auditRoutes); // Temporarily disabled
+app.use('/api/academic', academicRoutes);
+app.use('/api/audit', auditRoutes); // Uncomment this line
 app.use('/api/sms', smsRoutes); // Add SMS routes
 
+// 404 handler
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({
@@ -604,7 +617,26 @@ app.use('*', (req, res) => {
         redoc: '/docs',
         api: '/api'
       },
-      health: '/health'
+      health: '/health',
+      api: {
+        auth: '/api/auth',
+        users: '/api/users', 
+        schools: '/api/schools',
+        academic: '/api/academic',
+        audit: '/api/audit', // Add this line
+        sms: '/api/sms'
+      },
+      academicEndpoints: {
+        academicYears: '/api/academic/academic-years',
+        classes: '/api/academic/classes',
+        attendance: '/api/academic/attendance'
+      },
+      auditEndpoints: { // Add this section
+        logs: '/api/audit/logs',
+        userActivity: '/api/audit/user-activity',
+        dashboard: '/api/audit/dashboard',
+        export: '/api/audit/export'
+      }
     }
   });
 });

@@ -3,10 +3,46 @@ const pool = require('../config/database');
 
 const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!authHeader) {
+    return res.status(401).json({ 
+      success: false,
+      error: 'Authorization header missing',
+      message: 'Please provide Authorization header with Bearer token'
+    });
+  }
+
+  if (!authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ 
+      success: false,
+      error: 'Invalid authorization format',
+      message: 'Authorization header must start with "Bearer "'
+    });
+  }
+
+  const token = authHeader.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({ error: 'Access token required' });
+    return res.status(401).json({ 
+      success: false,
+      error: 'Access token required',
+      message: 'Token missing after Bearer'
+    });
+  }
+
+  // Basic token format validation
+  const tokenParts = token.split('.');
+  if (tokenParts.length !== 3) {
+    return res.status(401).json({ 
+      success: false,
+      error: 'Malformed token',
+      message: 'JWT token must have 3 parts separated by dots',
+      debug: {
+        tokenLength: token.length,
+        parts: tokenParts.length,
+        tokenStart: token.substring(0, 20) + '...'
+      }
+    });
   }
 
   try {
@@ -24,7 +60,11 @@ const authenticateToken = async (req, res, next) => {
     const result = await pool.query(userQuery, [decoded.userId]);
     
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid token' });
+      return res.status(401).json({ 
+        success: false,
+        error: 'Invalid token',
+        message: 'User not found or inactive'
+      });
     }
 
     req.user = {
@@ -42,7 +82,33 @@ const authenticateToken = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Token verification error:', error);
-    return res.status(403).json({ error: 'Invalid token' });
+    
+    let errorMessage = 'Invalid token';
+    let errorDetails = {};
+
+    if (error.name === 'JsonWebTokenError') {
+      errorMessage = 'Malformed or invalid JWT token';
+      errorDetails = {
+        reason: error.message,
+        tokenStart: token.substring(0, 20) + '...'
+      };
+    } else if (error.name === 'TokenExpiredError') {
+      errorMessage = 'Token has expired';
+      errorDetails = {
+        expiredAt: error.expiredAt
+      };
+    } else if (error.name === 'NotBeforeError') {
+      errorMessage = 'Token not active yet';
+      errorDetails = {
+        date: error.date
+      };
+    }
+
+    return res.status(403).json({ 
+      success: false,
+      error: errorMessage,
+      details: errorDetails
+    });
   }
 };
 

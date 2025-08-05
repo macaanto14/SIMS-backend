@@ -1,0 +1,6 @@
+// ... existing code ...
+
+// Enhanced authentication routes
+router.use('/auth', require('./enhancedAuth'));
+
+// ... existing code ...

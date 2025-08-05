@@ -293,3 +293,37 @@ For support and questions:
 ---
 
 Built with ❤️ for modern school management systems.
+
+
+## Key Features:
+### Login Flow:
+1. 1.
+   User enters email/password
+2. 2.
+   System returns available roles if user has multiple roles
+3. 3.
+   User selects desired role
+4. 4.
+   System returns JWT token with role-specific permissions
+5. 5.
+   Frontend can display role-appropriate interface
+### Permission System:
+- Each role has specific module permissions (create, read, update, delete)
+- Permissions are cached for performance
+- Real-time permission checking
+- School-context aware permissions
+### Security Features:
+- Rate limiting on authentication endpoints
+- Password strength validation
+- Account lockout protection
+- Audit logging for all authentication events
+- JWT token with role information
+## 📱 Frontend Deployment Ready:
+The documentation includes:
+
+- Complete endpoint specifications
+- Request/response examples
+- Error handling guidelines
+- Authentication flow implementation
+- Role-based UI component examples
+- WebSocket integration for real-time updates

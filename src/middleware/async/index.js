@@ -4,18 +4,33 @@
  */
 
 const rateLimit = require('express-rate-limit');
-const RedisStore = require('rate-limit-redis');
-const redis = require('redis');
 const { executeQuery } = require('../../utils/database');
 const { CacheService } = require('../../core/services/CacheService');
 const logger = require('../../utils/logger');
 const { asyncHandler } = require('../../utils/errors');
 
-// Redis client for rate limiting
-const redisClient = redis.createClient({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: process.env.REDIS_PORT || 6379
-});
+// Optional Redis setup
+let redisClient = null;
+let RedisStore = null;
+
+try {
+  if (process.env.REDIS_URL && process.env.NODE_ENV !== 'development') {
+    const redis = require('redis');
+    RedisStore = require('rate-limit-redis');
+    
+    redisClient = redis.createClient({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: process.env.REDIS_PORT || 6379
+    });
+    
+    redisClient.on('error', (err) => {
+      console.warn('Redis connection failed, falling back to memory store:', err.message);
+      redisClient = null;
+    });
+  }
+} catch (error) {
+  console.warn('Redis not available, using memory store for rate limiting:', error.message);
+}
 
 /**
  * Enhanced authentication middleware with caching
@@ -32,8 +47,13 @@ const enhancedAuth = asyncHandler(async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Check cache first for user data
-    let userData = await CacheService.getUserSession(decoded.userId).catch(() => null);
+    // Check cache first for user data (if available)
+    let userData = null;
+    try {
+      userData = await CacheService.getUserSession(decoded.userId);
+    } catch (err) {
+      // Cache service not available, continue without cache
+    }
     
     if (!userData) {
       // Fallback to database with optimized query
@@ -59,11 +79,15 @@ const enhancedAuth = asyncHandler(async (req, res, next) => {
 
       userData = userResult.rows[0];
       
-      // Cache user data asynchronously
+      // Cache user data asynchronously (if cache service is available)
       setImmediate(() => {
-        CacheService.setUserSession(decoded.userId, userData).catch(err => 
-          logger.error('Session cache failed:', err)
-        );
+        try {
+          CacheService.setUserSession(decoded.userId, userData).catch(err => 
+            logger.error('Session cache failed:', err)
+          );
+        } catch (err) {
+          // Cache service not available
+        }
       });
     }
 
@@ -93,11 +117,7 @@ const createAdaptiveRateLimit = (options = {}) => {
     adminLimit = 5000
   } = options;
 
-  return rateLimit({
-    store: new RedisStore({
-      client: redisClient,
-      prefix: 'rl:'
-    }),
+  const rateLimitConfig = {
     windowMs,
     max: async (req) => {
       if (!req.user) return standardLimit;
@@ -129,7 +149,17 @@ const createAdaptiveRateLimit = (options = {}) => {
         retryAfter: Math.round(windowMs / 1000)
       });
     }
-  });
+  };
+
+  // Use Redis store if available, otherwise use memory store
+  if (redisClient && RedisStore) {
+    rateLimitConfig.store = new RedisStore({
+      client: redisClient,
+      prefix: 'rl:'
+    });
+  }
+
+  return rateLimit(rateLimitConfig);
 };
 
 /**
@@ -239,9 +269,13 @@ const cacheMiddleware = (ttl = 300) => {
       res.json = function(data) {
         // Cache response asynchronously
         setImmediate(() => {
-          CacheService.set(cacheKey, data, ttl).catch(err => 
-            logger.error('Cache set failed:', err)
-          );
+          try {
+            CacheService.set(cacheKey, data, ttl).catch(err => 
+              logger.error('Cache set failed:', err)
+            );
+          } catch (err) {
+            // Cache service not available
+          }
         });
         
         return originalJson.call(this, data);
