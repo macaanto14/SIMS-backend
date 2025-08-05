@@ -33,7 +33,7 @@ The frontend expects these endpoints to be implemented:
 {
   "account_sid": "AC131789d6616539423cfee4038cc9d8dc",
   "sid": "VE...",
-  "service_sid": "VA4bc275d07c23341a7850b9c33851d28a",
+  "service_sid": "xxxxxxxxxxxxxxx",
   "to": "+251927802065",
   "channel": "sms",
   "status": "pending",
@@ -53,9 +53,9 @@ The frontend expects these endpoints to be implemented:
 
 // Response:
 {
-  "account_sid": "AC131789d6616539423cfee4038cc9d8dc",
+  "account_sid": "xxxxxxxx",
   "sid": "VE...",
-  "service_sid": "VA4bc275d07c23341a7850b9c33851d28a",
+  "service_sid": "xxxxxxxx",
   "to": "+251927802065",
   "channel": "sms",
   "status": "approved",

@@ -41,13 +41,13 @@ const { validateSMSRequest, validateSMSVerification, handleValidationErrors } = 
  *       properties:
  *         account_sid:
  *           type: string
- *           example: "AC131789d6616539423cfee4038cc9d8dc"
+ *           example: "xxxxxxx"
  *         sid:
  *           type: string
  *           example: "VE..."
  *         service_sid:
  *           type: string
- *           example: "VA4bc275d07c23341a7850b9c33851d28a"
+ *           example: "xxxxxxxxxxxxxx"
  *         to:
  *           type: string
  *           example: "+251927802065"
